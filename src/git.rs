@@ -9,6 +9,12 @@ pub async fn remote_url(name: &str) -> Result<String> {
     Ok(out.trim().to_string())
 }
 
+/// Read an arbitrary local git config key (e.g. `bb.default-repo`).
+pub async fn config_get(key: &str) -> Result<String> {
+    let out = run(&["config", "--get", key]).await?;
+    Ok(out.trim().to_string())
+}
+
 pub async fn current_branch() -> Result<String> {
     let out = run(&["symbolic-ref", "--short", "HEAD"]).await?;
     Ok(out.trim().to_string())

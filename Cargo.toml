@@ -29,6 +29,7 @@ anstream = "0.6"
 url = "2"
 directories = "5"
 oauth2 = "4"
+tempfile = "3"
 
 [dev-dependencies]
 assert_cmd = "2"
