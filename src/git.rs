@@ -15,6 +15,34 @@ pub async fn config_get(key: &str) -> Result<String> {
     Ok(out.trim().to_string())
 }
 
+/// Read a key from the user's *global* git config (`~/.gitconfig`).
+pub async fn config_get_global(key: &str) -> Result<String> {
+    let out = run(&["config", "--global", "--get", key]).await?;
+    Ok(out.trim().to_string())
+}
+
+/// Append a value to a multi-valued *global* git config key.
+pub async fn config_add_global(key: &str, value: &str) -> Result<()> {
+    run(&["config", "--global", "--add", key, value]).await.map(|_| ())
+}
+
+/// Remove every value of a multi-valued *global* git config key. Tolerates
+/// "key not found" exits (status 5 in modern git).
+pub async fn config_unset_global_all(key: &str) -> Result<()> {
+    match run(&["config", "--global", "--unset-all", key]).await {
+        Ok(_) => Ok(()),
+        Err(e) => {
+            // git exits 5 when the key was already absent — that's fine.
+            let msg = e.to_string();
+            if msg.contains("exit 5") {
+                Ok(())
+            } else {
+                Err(e)
+            }
+        }
+    }
+}
+
 pub async fn current_branch() -> Result<String> {
     let out = run(&["symbolic-ref", "--short", "HEAD"]).await?;
     Ok(out.trim().to_string())

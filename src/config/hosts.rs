@@ -75,6 +75,77 @@ impl Hosts {
         let block = Value::Mapping(self.host_block(host));
         Ok(serde_yaml::to_string(&block)?)
     }
+
+    /// Names of users recorded under `<host>.users:`.
+    pub fn users(&self, host: &str) -> Vec<String> {
+        let block = self.host_block(host);
+        match block.get("users") {
+            Some(Value::Mapping(m)) => m.keys().filter_map(value_to_string).collect(),
+            _ => Vec::new(),
+        }
+    }
+
+    /// Mapping stored under `<host>.users.<user>` (empty mapping if absent).
+    pub fn user_block(&self, host: &str, user: &str) -> Mapping {
+        let host_block = self.host_block(host);
+        match host_block.get("users") {
+            Some(Value::Mapping(users)) => match users.get(user) {
+                Some(Value::Mapping(m)) => m.clone(),
+                _ => Mapping::new(),
+            },
+            _ => Mapping::new(),
+        }
+    }
+
+    /// Replace (or insert) the user block under `<host>.users.<user>`.
+    pub async fn set_user_block(
+        &mut self,
+        host: &str,
+        user: &str,
+        block: Mapping,
+    ) -> Result<()> {
+        let host_v = Value::String(host.into());
+        let users_v = Value::String("users".into());
+        let user_v = Value::String(user.into());
+
+        let host_map = match self.data.get_mut(&host_v) {
+            Some(Value::Mapping(m)) => m,
+            _ => {
+                self.data
+                    .insert(host_v.clone(), Value::Mapping(Mapping::new()));
+                if let Some(Value::Mapping(m)) = self.data.get_mut(&host_v) {
+                    m
+                } else {
+                    unreachable!()
+                }
+            }
+        };
+
+        let users_map = match host_map.get_mut(&users_v) {
+            Some(Value::Mapping(m)) => m,
+            _ => {
+                host_map.insert(users_v.clone(), Value::Mapping(Mapping::new()));
+                if let Some(Value::Mapping(m)) = host_map.get_mut(&users_v) {
+                    m
+                } else {
+                    unreachable!()
+                }
+            }
+        };
+
+        users_map.insert(user_v, Value::Mapping(block));
+        yaml::save_mapping(&self.path, &self.data).await
+    }
+
+    /// Remove `<host>.users.<user>`. Persists immediately.
+    pub async fn remove_user(&mut self, host: &str, user: &str) -> Result<()> {
+        if let Some(Value::Mapping(host_map)) = self.data.get_mut(host) {
+            if let Some(Value::Mapping(users)) = host_map.get_mut("users") {
+                users.remove(user);
+            }
+        }
+        yaml::save_mapping(&self.path, &self.data).await
+    }
 }
 
 #[cfg(test)]
@@ -119,6 +190,47 @@ mod tests {
             .await
             .unwrap();
         assert_eq!(h.get("bitbucket.org", "active_user"), None);
+    }
+
+    #[tokio::test]
+    async fn user_block_round_trip() {
+        let dir = TempDir::new().unwrap();
+        let path = dir.path().join("hosts.yml");
+        let mut h = Hosts::load_from(&path).await.unwrap();
+        let mut block = Mapping::new();
+        block.insert(
+            Value::String("type".into()),
+            Value::String("oauth".into()),
+        );
+        block.insert(
+            Value::String("git_protocol".into()),
+            Value::String("ssh".into()),
+        );
+        h.set_user_block("bitbucket.org", "hbackman", block.clone())
+            .await
+            .unwrap();
+        let reloaded = Hosts::load_from(&path).await.unwrap();
+        assert_eq!(reloaded.user_block("bitbucket.org", "hbackman"), block);
+        assert_eq!(reloaded.users("bitbucket.org"), vec!["hbackman".to_string()]);
+    }
+
+    #[tokio::test]
+    async fn remove_user_keeps_other_users() {
+        let dir = TempDir::new().unwrap();
+        let path = dir.path().join("hosts.yml");
+        let mut h = Hosts::load_from(&path).await.unwrap();
+        let mut b = Mapping::new();
+        b.insert(Value::String("type".into()), Value::String("oauth".into()));
+        h.set_user_block("bitbucket.org", "alice", b.clone())
+            .await
+            .unwrap();
+        h.set_user_block("bitbucket.org", "bob", b.clone())
+            .await
+            .unwrap();
+        h.remove_user("bitbucket.org", "alice").await.unwrap();
+        let reloaded = Hosts::load_from(&path).await.unwrap();
+        let users = reloaded.users("bitbucket.org");
+        assert_eq!(users, vec!["bob".to_string()]);
     }
 
     #[tokio::test]

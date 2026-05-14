@@ -2,7 +2,7 @@
 
 **Status:** Draft (Rust)
 **Depends on:** [`01-architecture.md`](01-architecture.md), [`03-configuration.md`](03-configuration.md)
-**Slice goal:** `bb auth login` runs an OAuth browser flow, stores tokens in the OS keyring (or plaintext fallback), and `bb auth status` reflects the result. `bb auth logout`, `bb auth token`, `bb auth refresh`, `bb auth switch`, `bb auth setup-git`, and `bb auth git-credential` all work. Token refresh happens transparently on 401 from the API client.
+**Slice goal:** `bb auth login` runs an OAuth browser flow, stores tokens in the OS keyring (or plaintext fallback), and `bb auth status` reflects the result. `bb auth logout`, `bb auth token`, `bb auth switch`, `bb auth setup-git`, and `bb auth git-credential` all work. Token refresh happens transparently on 401 from the API client — no user-facing `refresh` command (re-run `login` if the refresh-token-expired path triggers).
 
 ## Background you need to know
 
@@ -309,10 +309,6 @@ Prints the active access token (refreshed if needed) to stdout. Exits with `CliE
 
 Flags: `--hostname`, `--user`.
 
-### `bb auth refresh`
-
-Force-refreshes the OAuth token. Flags: `--hostname`, `--user`, `--scopes` (request a new scope set; triggers a fresh browser flow).
-
 ### `bb auth switch`
 
 ```
@@ -379,7 +375,6 @@ src/cli/auth/
 ├── logout.rs
 ├── status.rs
 ├── token.rs
-├── refresh.rs
 ├── switch.rs
 ├── setup_git.rs
 └── git_credential.rs

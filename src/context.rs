@@ -1,7 +1,8 @@
-use std::sync::OnceLock;
+use std::sync::{Arc, OnceLock};
 
 use tokio::sync::OnceCell;
 
+use crate::auth::{AuthSource, Browser, DefaultBrowser, KeyringBackend, SystemKeyring};
 use crate::bbrepo::BbRepo;
 use crate::config::Config;
 use crate::error::CliError;
@@ -39,9 +40,16 @@ pub struct Context {
 
     /// Lazily constructed dependencies. Each is populated by the slice that owns it.
     pub config: OnceCell<Config>,
-    pub http: OnceCell<reqwest::Client>,
+    pub http: OnceLock<reqwest::Client>,
     pub api: OnceCell<crate::api::Client>,
     pub base_repo: OnceCell<BbRepo>,
+
+    /// Browser launcher. Tests pre-seed with `RecordingBrowser`; production reads
+    /// the default impl that shells out to `webbrowser`.
+    pub browser: OnceLock<Arc<dyn Browser>>,
+
+    /// OS keyring backend. Tests pre-seed with `MemKeyring`.
+    pub keyring: OnceLock<Arc<dyn KeyringBackend>>,
 }
 
 impl Context {
@@ -51,10 +59,39 @@ impl Context {
             build: BuildInfo::from_env(),
             repo_override: OnceLock::new(),
             config: OnceCell::new(),
-            http: OnceCell::new(),
+            http: OnceLock::new(),
             api: OnceCell::new(),
             base_repo: OnceCell::new(),
+            browser: OnceLock::new(),
+            keyring: OnceLock::new(),
         }
+    }
+
+    /// Lazily build a shared `reqwest::Client`. Used by auth/oauth/api paths.
+    pub fn http_client(&self) -> &reqwest::Client {
+        self.http.get_or_init(default_http_client)
+    }
+
+    /// Pluggable browser launcher (tests can pre-seed via `browser.set`).
+    pub fn browser(&self) -> Arc<dyn Browser> {
+        self.browser
+            .get_or_init(|| Arc::new(DefaultBrowser) as Arc<dyn Browser>)
+            .clone()
+    }
+
+    /// Pluggable keyring backend (tests pre-seed; production uses the OS keyring).
+    pub fn keyring(&self) -> Arc<dyn KeyringBackend> {
+        self.keyring
+            .get_or_init(|| Arc::new(SystemKeyring) as Arc<dyn KeyringBackend>)
+            .clone()
+    }
+
+    /// Build an [`AuthSource`] from the current configuration + injected dependencies.
+    pub async fn auth_source(&self) -> Result<AuthSource, CliError> {
+        let cfg = self.config_loaded().await?;
+        let http = self.http_client().clone();
+        let keyring = self.keyring();
+        Ok(AuthSource::new(cfg.hosts(), keyring, http))
     }
 
     /// Lazily load `config.yml` + `hosts.yml`. Cached for the rest of the run.
@@ -86,12 +123,21 @@ impl Context {
             },
             repo_override: OnceLock::new(),
             config: OnceCell::new(),
-            http: OnceCell::new(),
+            http: OnceLock::new(),
             api: OnceCell::new(),
             base_repo: OnceCell::new(),
+            browser: OnceLock::new(),
+            keyring: OnceLock::new(),
         };
         (ctx, bufs)
     }
+}
+
+fn default_http_client() -> reqwest::Client {
+    reqwest::Client::builder()
+        .user_agent(concat!("bb/", env!("CARGO_PKG_VERSION")))
+        .build()
+        .expect("build reqwest client")
 }
 
 async fn resolve_base_repo(ctx: &Context) -> Result<BbRepo, CliError> {
