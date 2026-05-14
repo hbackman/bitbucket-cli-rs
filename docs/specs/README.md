@@ -24,10 +24,10 @@ Roughly:
 | Order | Spec | Status |
 | --- | --- | --- |
 | 1 | **01-architecture** — scaffold the binary, dependencies, command tree skeleton, IoStreams, app context, tests pass. | ✅ Done |
-| 2 | **03-configuration** — config files, env vars, repo resolution. | ⏭ Next |
-| 3 | **02-authentication** — OAuth flow, token storage, `bb auth …` commands. | pending |
-| 4 | **04-api-client** — typed REST client, `bb api`. | pending |
-| 5 | **05-output** — `--json`, `--jq`, tables, TTY detection. | pending |
+| 2 | **03-configuration** — config files, env vars, repo resolution. | ✅ Done |
+| 3 | **02-authentication** — OAuth flow, token storage, `bb auth …` commands. | ✅ Done |
+| 4 | **04-api-client** — typed REST client, `bb api`. | ✅ Done |
+| 5 | **05-output** — `--json`, `--jq`, tables, TTY detection. | ⏭ Next |
 | 6 | **07-commands-repo** — `bb repo view/list/clone/create/fork`, `bb browse`, `bb version`. | pending |
 | 7 | **06-commands-pr** — PR commands; the bulk of the surface. | pending |
 | 8 | **08-distribution** — `cargo-dist`, Homebrew tap, releases. **0.1 ships here.** | pending |
@@ -40,7 +40,7 @@ Specs 02 and 03 can technically be done in parallel; everything else builds on t
 Paste this into a fresh session to pick up the next slice:
 
 ```
-Read docs/specs/00-overview.md, docs/specs/01-architecture.md, and docs/specs/03-configuration.md, then follow 03's instructions.
+Read docs/specs/00-overview.md, docs/specs/01-architecture.md, docs/specs/02-authentication.md, docs/specs/03-configuration.md, docs/specs/04-api-client.md, and docs/specs/05-output.md, then follow 05's instructions.
 ```
 
 After the slice lands, mark its row ✅ Done and update the "⏭ Next" marker to the row below.

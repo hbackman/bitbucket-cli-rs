@@ -1,4 +1,5 @@
 use std::sync::{Arc, OnceLock};
+use std::time::Duration;
 
 use tokio::sync::OnceCell;
 
@@ -94,6 +95,25 @@ impl Context {
         Ok(AuthSource::new(cfg.hosts(), keyring, http))
     }
 
+    /// Lazily build a [`crate::api::Client`]. Hooked to the default Bitbucket host.
+    /// Tests that need to point at a `wiremock` server build their own client
+    /// directly via [`crate::api::build_client`] / [`crate::api::Client::with_base`].
+    pub async fn api(&self) -> Result<&crate::api::Client, CliError> {
+        self.api
+            .get_or_try_init(|| async {
+                let source = Arc::new(self.auth_source().await?);
+                let http = self.http_client().clone();
+                let ua = format!("bb/{} (+{})", self.build.version, BB_HOMEPAGE);
+                Ok::<_, CliError>(crate::api::build_client(
+                    http,
+                    source,
+                    crate::config::DEFAULT_HOST,
+                    &ua,
+                ))
+            })
+            .await
+    }
+
     /// Lazily load `config.yml` + `hosts.yml`. Cached for the rest of the run.
     pub async fn config_loaded(&self) -> Result<&Config, CliError> {
         self.config
@@ -133,9 +153,17 @@ impl Context {
     }
 }
 
+pub const BB_HOMEPAGE: &str = "https://github.com/hbackman/bitbucket-cli";
+
 fn default_http_client() -> reqwest::Client {
+    let ua = format!(
+        "bb/{} (+{})",
+        env!("CARGO_PKG_VERSION"),
+        BB_HOMEPAGE
+    );
     reqwest::Client::builder()
-        .user_agent(concat!("bb/", env!("CARGO_PKG_VERSION")))
+        .user_agent(ua)
+        .timeout(Duration::from_secs(30))
         .build()
         .expect("build reqwest client")
 }

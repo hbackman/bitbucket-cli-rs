@@ -33,12 +33,23 @@ keyring = { version = "3", features = ["apple-native", "linux-native-sync-persis
 webbrowser = "1"
 time = { version = "0.3", features = ["serde", "macros", "formatting", "parsing", "serde-well-known"] }
 tempfile = "3"
+async-stream = "0.3"
+bytes = "1"
+humantime = "2"
+sha2 = "0.10"
+hex = "0.4"
+futures = { version = "0.3", default-features = false, features = ["std"] }
+jaq-core = "1"
+jaq-interpret = "1"
+jaq-parse = "1"
+jaq-std = "1"
 
 [dev-dependencies]
 assert_cmd = "2"
 predicates = "3"
 tempfile = "3"
 wiremock = "0.6"
+futures = { version = "0.3", default-features = false, features = ["std"] }
 
 [profile.release]
 lto = "thin"
