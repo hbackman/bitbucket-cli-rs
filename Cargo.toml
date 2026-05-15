@@ -111,3 +111,10 @@ install-updater = false
 [workspace.metadata.dist.github-custom-runners]
 aarch64-unknown-linux-gnu = "ubuntu-24.04-arm"
 aarch64-unknown-linux-musl = "ubuntu-24.04-arm"
+
+# Linux gnu builds enable keyring's linux-native-sync-persistent feature, which
+# transitively requires libdbus headers at compile time. musl builds skip the
+# feature (plaintext-fallback only) and don't need this.
+[workspace.metadata.dist.dependencies.apt]
+libdbus-1-dev = { version = "*", targets = ["x86_64-unknown-linux-gnu", "aarch64-unknown-linux-gnu"] }
+pkg-config = { version = "*", targets = ["x86_64-unknown-linux-gnu", "aarch64-unknown-linux-gnu"] }
