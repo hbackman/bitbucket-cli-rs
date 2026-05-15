@@ -111,11 +111,38 @@ impl From<ApiError> for CliError {
             ApiError::Auth { hint } => CliError::Auth(hint),
             ApiError::RateLimit { retry_after_secs } => CliError::RateLimit { retry_after_secs },
             ApiError::Response(r) if r.status == reqwest::StatusCode::NOT_FOUND => {
-                CliError::NotFound(format!("{}: {}", r.url, r.message))
+                CliError::NotFound(render_404(&r))
             }
             other => CliError::Other(anyhow::Error::from(other)),
         }
     }
+}
+
+/// Bitbucket's 404 body always includes a wordy "you may not have access ...
+/// make sure you are authenticated" suggestion that's misleading when the user
+/// is already logged in. Trim to something terse and accurate.
+fn render_404(r: &ResponseError) -> String {
+    if let Some(repo) = repo_path_from_url(&r.url) {
+        return format!("{repo} (repository missing or token lacks access)");
+    }
+    // Non-repository 404s — show the path without the api.bitbucket.org prefix.
+    let path = url_path(&r.url).unwrap_or_else(|| r.url.clone());
+    format!("{path}: {}", r.message)
+}
+
+/// `https://api.bitbucket.org/2.0/repositories/ws/slug/...` -> `Some("ws/slug")`.
+fn repo_path_from_url(url: &str) -> Option<String> {
+    let parsed = url::Url::parse(url).ok()?;
+    let rest = parsed.path().strip_prefix("/2.0/repositories/")?;
+    let mut parts = rest.split('/').filter(|s| !s.is_empty());
+    let ws = parts.next()?;
+    let slug = parts.next()?;
+    Some(format!("{ws}/{slug}"))
+}
+
+fn url_path(url: &str) -> Option<String> {
+    let parsed = url::Url::parse(url).ok()?;
+    Some(parsed.path().to_string())
 }
 
 #[cfg(test)]
@@ -138,6 +165,35 @@ mod tests {
             }
             _ => panic!("expected Response"),
         }
+    }
+
+    #[test]
+    fn render_404_for_repository_path_is_terse() {
+        let err = ResponseError {
+            status: reqwest::StatusCode::NOT_FOUND,
+            method: reqwest::Method::GET,
+            url: "https://api.bitbucket.org/2.0/repositories/acme/widgets/pullrequests?state=OPEN".into(),
+            message: "You may not have access to this repository or it no longer exists in this workspace. If you think this repository exists and you have access, make sure you are authenticated.".into(),
+            errors: vec![],
+            raw: bytes::Bytes::new(),
+        };
+        assert_eq!(
+            render_404(&err),
+            "acme/widgets (repository missing or token lacks access)"
+        );
+    }
+
+    #[test]
+    fn render_404_for_non_repository_path_keeps_message() {
+        let err = ResponseError {
+            status: reqwest::StatusCode::NOT_FOUND,
+            method: reqwest::Method::GET,
+            url: "https://api.bitbucket.org/2.0/users/nobody".into(),
+            message: "User not found.".into(),
+            errors: vec![],
+            raw: bytes::Bytes::new(),
+        };
+        assert_eq!(render_404(&err), "/2.0/users/nobody: User not found.");
     }
 
     #[test]
