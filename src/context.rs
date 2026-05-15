@@ -199,55 +199,30 @@ async fn resolve_base_repo(ctx: &Context) -> Result<BbRepo, CliError> {
         }
     }
 
-    // 4-5. git remote origin / upstream.
-    let known_hosts = bitbucket_hosts(ctx).await;
-    let mut foreign_host: Option<String> = None;
+    // 4-5. git remote origin / upstream. We take the workspace/slug from the
+    // remote and ignore its host — bbk only ever talks to the configured
+    // Bitbucket host, so a github.com / gitlab.com / etc. remote is treated as
+    // a workspace/slug shortcut. The user gets a Bitbucket-side 404 if no such
+    // repo exists there.
+    let default_host = ctx
+        .config_loaded()
+        .await
+        .map(|c| c.get_or_default("default_host"))
+        .unwrap_or_else(|_| crate::config::DEFAULT_HOST.to_string());
     for remote in ["origin", "upstream"] {
         if let Ok(url) = crate::git::remote_url(remote).await {
             if !url.is_empty() {
-                if let Ok(repo) = BbRepo::parse_remote(&url) {
-                    if is_bitbucket_host(&repo.host, &known_hosts) {
-                        return Ok(repo);
-                    }
-                    foreign_host.get_or_insert_with(|| repo.host.clone());
+                if let Ok(mut repo) = BbRepo::parse_remote(&url) {
+                    repo.host = default_host.clone();
+                    return Ok(repo);
                 }
             }
         }
     }
 
-    if let Some(host) = foreign_host {
-        return Err(CliError::Flag(format!(
-            "git remote points at {host}, not a Bitbucket host. \
-             bbk only talks to Bitbucket — pass `--repo WORKSPACE/REPO` to override, \
-             or run `bbk repo set-default WORKSPACE/REPO` in this clone."
-        )));
-    }
-
     Err(CliError::Flag(
         "no repository specified — use --repo or `bbk repo set-default`".into(),
     ))
-}
-
-/// Hosts we treat as Bitbucket: `default_host` from config (bitbucket.org by
-/// default) plus every host in hosts.yml. Self-hosted Bitbucket Server installs
-/// land here once the user has run `bbk auth login --hostname ...`.
-async fn bitbucket_hosts(ctx: &Context) -> Vec<String> {
-    let mut out = Vec::new();
-    if let Ok(cfg) = ctx.config_loaded().await {
-        out.push(cfg.get_or_default("default_host"));
-        let hosts = cfg.hosts();
-        let h = hosts.read().await;
-        out.extend(h.hosts());
-    } else {
-        out.push(crate::config::DEFAULT_HOST.to_string());
-    }
-    out.sort();
-    out.dedup();
-    out
-}
-
-fn is_bitbucket_host(host: &str, known: &[String]) -> bool {
-    known.iter().any(|h| h == host)
 }
 
 #[cfg(test)]
