@@ -1,6 +1,6 @@
 [package]
 name = "bb"
-version = "0.0.0-dev"
+version = "0.1.0"
 edition = "2021"
 rust-version = "1.75"
 license = "MIT"
@@ -29,7 +29,6 @@ anstream = "0.6"
 url = "2"
 directories = "5"
 oauth2 = { version = "4", default-features = false, features = ["reqwest", "rustls-tls"] }
-keyring = { version = "3", features = ["apple-native", "linux-native-sync-persistent", "windows-native"] }
 webbrowser = "1"
 time = { version = "0.3", features = ["serde", "macros", "formatting", "parsing", "serde-well-known"] }
 tempfile = "3"
@@ -49,6 +48,21 @@ unicode-width = "0.2"
 clap_complete = "4"
 semver = "1"
 
+# Keyring backends are split per target so static musl builds (used in releases
+# without libdbus available) compile without a backend feature and fall back to
+# plaintext storage. See spec 08 §"Linux package distribution".
+[target.'cfg(target_os = "macos")'.dependencies]
+keyring = { version = "3", default-features = false, features = ["apple-native"] }
+
+[target.'cfg(target_os = "windows")'.dependencies]
+keyring = { version = "3", default-features = false, features = ["windows-native"] }
+
+[target.'cfg(all(target_os = "linux", not(target_env = "musl")))'.dependencies]
+keyring = { version = "3", default-features = false, features = ["linux-native-sync-persistent"] }
+
+[target.'cfg(all(target_os = "linux", target_env = "musl"))'.dependencies]
+keyring = { version = "3", default-features = false }
+
 [dev-dependencies]
 assert_cmd = "2"
 predicates = "3"
@@ -60,3 +74,40 @@ futures = { version = "0.3", default-features = false, features = ["std"] }
 lto = "thin"
 codegen-units = 1
 strip = "symbols"
+
+# The profile that 'dist' will build with
+[profile.dist]
+inherits = "release"
+lto = "thin"
+
+# Config for 'dist'
+[workspace.metadata.dist]
+# The preferred dist version to use in CI (Cargo.toml SemVer syntax)
+cargo-dist-version = "0.31.0"
+# CI backends to support
+ci = "github"
+# The installers to generate for each app
+installers = ["shell", "powershell", "homebrew"]
+# Target platforms to build apps for (Rust target-triple syntax)
+targets = ["aarch64-apple-darwin", "aarch64-unknown-linux-gnu", "aarch64-unknown-linux-musl", "x86_64-apple-darwin", "x86_64-unknown-linux-gnu", "x86_64-unknown-linux-musl", "x86_64-pc-windows-msvc"]
+# A GitHub repo to push Homebrew formulas to
+tap = "hbackman/homebrew-bb"
+# Publish jobs to run in CI
+publish-jobs = ["homebrew"]
+# Which actions to run on pull requests
+pr-run-mode = "plan"
+# Skip overwriting release.yml on `dist generate` since we hand-patch in
+# BB_OAUTH_CLIENT_ID / BB_OAUTH_CLIENT_SECRET env vars (spec 02 / 08).
+# Re-run `dist generate --mode ci` with this commented out if metadata above
+# changes, then re-apply the env-var patch.
+allow-dirty = ["ci"]
+# Path that installers should place binaries in
+install-path = "CARGO_HOME"
+# Where to host releases
+hosting = "github"
+# Whether to install an updater program
+install-updater = false
+
+[workspace.metadata.dist.github-custom-runners]
+aarch64-unknown-linux-gnu = "ubuntu-24.04-arm"
+aarch64-unknown-linux-musl = "ubuntu-24.04-arm"
