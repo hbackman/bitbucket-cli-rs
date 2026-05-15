@@ -75,7 +75,11 @@ pub struct MainBranch {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Workspace {
     pub slug: String,
-    pub name: String,
+    // `GET /2.0/user/workspaces` returns workspace_access objects whose embedded
+    // workspace omits `name`; only `/2.0/workspaces/{slug}` includes it. Treat
+    // as optional and fall back to `slug` for display.
+    #[serde(default)]
+    pub name: Option<String>,
     #[serde(default)]
     pub uuid: Option<String>,
     #[serde(default)]
