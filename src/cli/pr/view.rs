@@ -114,7 +114,10 @@ fn render_human(ctx: &mut Context, pr: &PullRequest) -> Result<(), CliError> {
 
     let src = source_branch(pr).unwrap_or_else(|| "?".into());
     let dst = destination_branch(pr).unwrap_or_else(|| "?".into());
-    writeln!(ctx.io.out(), "Source branch: {src} → {dst}").map_err(io_err)?;
+    writeln!(ctx.io.out(), "{src} → {dst}").map_err(io_err)?;
+
+    let url = pr_html_url(pr).unwrap_or_else(|| fallback_url(ctx, pr));
+    writeln!(ctx.io.out(), "{}: {url}", cs.gray("URL")).map_err(io_err)?;
 
     if !pr.reviewers.is_empty() {
         let names: Vec<String> = pr
@@ -122,24 +125,31 @@ fn render_human(ctx: &mut Context, pr: &PullRequest) -> Result<(), CliError> {
             .iter()
             .map(|a| actor_display(Some(a)))
             .collect();
-        writeln!(ctx.io.out(), "Reviewers: {}", names.join(", ")).map_err(io_err)?;
+        writeln!(ctx.io.out()).map_err(io_err)?;
+        writeln!(ctx.io.out(), "{}", section(&cs, "Reviewers")).map_err(io_err)?;
+        writeln!(ctx.io.out(), "  {}", names.join(", ")).map_err(io_err)?;
     }
 
     if let Some(n) = pr.comment_count {
         if n > 0 {
-            writeln!(ctx.io.out(), "{}", pluralize(n as i64, "comment")).map_err(io_err)?;
+            writeln!(ctx.io.out()).map_err(io_err)?;
+            writeln!(ctx.io.out(), "{}", section(&cs, "Comments")).map_err(io_err)?;
+            writeln!(ctx.io.out(), "  {}", pluralize(n as i64, "comment")).map_err(io_err)?;
         }
     }
 
-    let url = pr_html_url(pr).unwrap_or_else(|| fallback_url(ctx, pr));
-    writeln!(ctx.io.out(), "URL: {url}").map_err(io_err)?;
-
     if let Some(body) = pr.description.as_deref().filter(|s| !s.is_empty()) {
         writeln!(ctx.io.out()).map_err(io_err)?;
+        writeln!(ctx.io.out(), "{}", section(&cs, "Description")).map_err(io_err)?;
         let rendered = markdown::render(body, &cs);
         writeln!(ctx.io.out(), "{rendered}").map_err(io_err)?;
     }
     Ok(())
+}
+
+/// Bold cyan section header used to break up `pr view` blocks.
+fn section(cs: &crate::iostreams::ColorScheme, label: &str) -> String {
+    cs.bold(cs.cyan(label))
 }
 
 async fn print_comments(ctx: &mut Context, pr: &PullRequest) -> Result<(), CliError> {
