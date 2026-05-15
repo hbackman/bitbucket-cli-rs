@@ -7,6 +7,7 @@ use crate::api::types::Repository;
 use crate::bbrepo::BbRepo;
 use crate::cli::jq;
 use crate::cli::json_flags::{JsonFlags, JsonMode};
+use crate::cli::markdown;
 use crate::context::Context;
 use crate::error::CliError;
 
@@ -57,8 +58,10 @@ pub async fn run(args: ViewArgs, ctx: &mut Context) -> Result<(), CliError> {
         .unwrap_or_else(|| "main".to_string());
     let readme = fetch_readme(&client, &repo, &branch).await;
     if let Some(body) = readme {
+        let cs = ctx.io.cs();
+        let rendered = markdown::render(body.trim_end(), &cs);
         writeln!(ctx.io.out()).map_err(io_err)?;
-        writeln!(ctx.io.out(), "{}", body.trim_end()).map_err(io_err)?;
+        writeln!(ctx.io.out(), "{rendered}").map_err(io_err)?;
     }
 
     Ok(())

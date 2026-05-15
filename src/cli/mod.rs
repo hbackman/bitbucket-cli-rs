@@ -9,6 +9,7 @@ pub mod completion;
 pub mod config;
 pub mod jq;
 pub mod json_flags;
+pub mod markdown;
 pub mod messages;
 pub mod pr;
 pub mod prompter;

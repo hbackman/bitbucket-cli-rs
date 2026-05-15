@@ -14,7 +14,7 @@ use super::display::{
     JSON_FIELDS,
 };
 use super::finder;
-use super::markdown;
+use crate::cli::markdown;
 
 #[derive(ClapArgs, Debug)]
 pub struct Args {

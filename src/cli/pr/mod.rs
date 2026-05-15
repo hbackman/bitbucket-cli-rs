@@ -15,7 +15,6 @@ pub mod display;
 pub mod edit;
 pub mod finder;
 pub mod list;
-pub mod markdown;
 pub mod merge;
 pub mod ready;
 pub mod reopen;
