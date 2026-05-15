@@ -142,30 +142,13 @@ async fn fetch_readme(client: &crate::api::Client, repo: &BbRepo, branch: &str) 
         match svc.read_source(repo, branch, name).await {
             Ok(bytes) => {
                 if let Ok(s) = std::str::from_utf8(&bytes) {
-                    return Some(
-                        prefix_lines(s, "  ")
-                            .into_iter()
-                            .collect::<Vec<_>>()
-                            .join(""),
-                    );
+                    return Some(s.to_string());
                 }
             }
             Err(_) => continue,
         }
     }
     None
-}
-
-fn prefix_lines(s: &str, prefix: &str) -> Vec<String> {
-    s.split_inclusive('\n')
-        .map(|line| {
-            if line.trim().is_empty() {
-                line.to_string()
-            } else {
-                format!("{prefix}{line}")
-            }
-        })
-        .collect()
 }
 
 fn io_err(e: std::io::Error) -> CliError {
