@@ -151,9 +151,23 @@ async fn login_with_browser(
         .map_err(|e| CliError::Other(e.into()))?;
     }
 
-    let code = callback::await_callback(listener, state.secret(), CALLBACK_TIMEOUT)
-        .await
-        .map_err(|e| CliError::Auth(e.to_string()))?;
+    let stdin_is_tty = ctx.io.is_stdin_tty();
+    if stdin_is_tty {
+        writeln!(
+            ctx.io.err(),
+            "  Or, if you're on a different machine, paste the full redirect URL or \
+             `code=...&state=...` from your browser and press enter."
+        )
+        .map_err(|e| CliError::Other(e.into()))?;
+    }
+
+    let code = race_callback_with_paste(
+        listener,
+        state.secret().to_string(),
+        CALLBACK_TIMEOUT,
+        stdin_is_tty,
+    )
+    .await?;
     let tokens = oauth::exchange_code(&client, code)
         .await
         .map_err(|e| CliError::Auth(e.to_string()))?;
@@ -230,6 +244,100 @@ fn parse_scopes(raw: Option<&str>) -> Vec<String> {
     }
 }
 
+/// Race the loopback HTTP callback against an optional stdin paste path.
+///
+/// `stdin_is_tty` gates the paste path: piping (e.g. CI) shouldn't try to read
+/// the user's terminal. The paste task loops on invalid input until it sees a
+/// well-formed URL/query; the callback wins as soon as the browser redirects
+/// back. If the callback wins, the paste task is left dangling and the process
+/// exits normally.
+async fn race_callback_with_paste(
+    listener: tokio::net::TcpListener,
+    expected_state: String,
+    timeout: Duration,
+    stdin_is_tty: bool,
+) -> Result<String, CliError> {
+    use tokio::io::AsyncBufReadExt;
+
+    let (tx, rx) = tokio::sync::oneshot::channel::<String>();
+    let state_for_paste = expected_state.clone();
+    if stdin_is_tty {
+        tokio::spawn(async move {
+            let stdin = tokio::io::stdin();
+            let mut reader = tokio::io::BufReader::new(stdin);
+            let mut buf = String::new();
+            let mut tx = Some(tx);
+            loop {
+                buf.clear();
+                let n = match reader.read_line(&mut buf).await {
+                    Ok(n) => n,
+                    Err(_) => return,
+                };
+                if n == 0 {
+                    return; // EOF — give up; callback may still fire
+                }
+                let line = buf.trim();
+                if line.is_empty() {
+                    continue;
+                }
+                match parse_pasted_code(line, &state_for_paste) {
+                    Ok(code) => {
+                        if let Some(sender) = tx.take() {
+                            let _ = sender.send(code);
+                        }
+                        return;
+                    }
+                    Err(msg) => {
+                        eprintln!("  {msg} Paste the full redirect URL again, or wait for the browser callback.");
+                    }
+                }
+            }
+        });
+    }
+
+    tokio::select! {
+        biased;
+        callback_result = callback::await_callback(listener, &expected_state, timeout) => {
+            callback_result.map_err(|e| CliError::Auth(e.to_string()))
+        }
+        paste_result = rx => {
+            paste_result.map_err(|_| CliError::Cancel)
+        }
+    }
+}
+
+/// Parse a pasted line — either a full redirect URL or a bare `code=...&state=...`
+/// query string — and validate the state token. Returns the authorization code on
+/// success, or a one-line error message suitable for printing back to the user.
+fn parse_pasted_code(input: &str, expected_state: &str) -> Result<String, String> {
+    let pairs: Vec<(String, String)> = if let Ok(url) = url::Url::parse(input) {
+        url.query_pairs().into_owned().collect()
+    } else if input.contains('=') {
+        url::form_urlencoded::parse(input.as_bytes())
+            .into_owned()
+            .collect()
+    } else {
+        return Err("That doesn't look like a redirect URL or a query string.".into());
+    };
+
+    let mut code = None;
+    let mut state = None;
+    for (k, v) in pairs {
+        match k.as_str() {
+            "code" => code = Some(v),
+            "state" => state = Some(v),
+            _ => {}
+        }
+    }
+
+    let code = code.ok_or_else(|| "Missing `code` parameter in pasted input.".to_string())?;
+    match state {
+        Some(s) if s == expected_state => Ok(code),
+        Some(_) => Err("Pasted input has a mismatched state token; paste the URL from the browser exactly.".into()),
+        None => Err("Pasted input is missing `state`; paste the full redirect URL.".into()),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -245,5 +353,45 @@ mod tests {
     fn parse_scopes_splits_on_comma() {
         let s = parse_scopes(Some("account, repository"));
         assert_eq!(s, vec!["account".to_string(), "repository".into()]);
+    }
+
+    #[test]
+    fn parse_pasted_code_accepts_full_redirect_url() {
+        let code = parse_pasted_code(
+            "http://localhost:54321/?code=abc-123&state=the-state",
+            "the-state",
+        )
+        .unwrap();
+        assert_eq!(code, "abc-123");
+    }
+
+    #[test]
+    fn parse_pasted_code_accepts_bare_query_string() {
+        let code = parse_pasted_code("code=abc&state=the-state", "the-state").unwrap();
+        assert_eq!(code, "abc");
+    }
+
+    #[test]
+    fn parse_pasted_code_rejects_state_mismatch() {
+        let err = parse_pasted_code("code=abc&state=other", "the-state").unwrap_err();
+        assert!(err.contains("mismatched state"));
+    }
+
+    #[test]
+    fn parse_pasted_code_rejects_missing_state() {
+        let err = parse_pasted_code("code=abc", "the-state").unwrap_err();
+        assert!(err.contains("missing `state`"));
+    }
+
+    #[test]
+    fn parse_pasted_code_rejects_missing_code() {
+        let err = parse_pasted_code("state=the-state", "the-state").unwrap_err();
+        assert!(err.contains("Missing `code`"));
+    }
+
+    #[test]
+    fn parse_pasted_code_rejects_unrecognized_input() {
+        let err = parse_pasted_code("hello world", "the-state").unwrap_err();
+        assert!(err.contains("doesn't look like"));
     }
 }
