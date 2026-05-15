@@ -1,6 +1,10 @@
-//! `--jq EXPR` filter for `bb api`. Uses `jaq`, the pure-Rust jq.
+//! Shared jq wrapper. Used by `bb api --jq` today and the per-command `--json
+//! --jq` pattern (see [`crate::cli::json_flags`]). Powered by `jaq`, the pure-Rust
+//! jq.
 //!
-//! Each match emitted by the filter is printed on its own line.
+//! Each filter output is rendered on its own line. Strings come out raw (matching
+//! `jq -r '.field'` for the typical `--jq '.field'` case); everything else is
+//! pretty-printed JSON.
 
 use anyhow::{anyhow, bail, Context, Result};
 use jaq_interpret::{Ctx, FilterT, ParseCtx, RcIter, Val};
@@ -42,8 +46,7 @@ pub fn run(expr: &str, input: Value) -> Result<Vec<Value>> {
     Ok(out)
 }
 
-/// Render one filter output. Strings are printed raw (matching `jq -r` for the
-/// common `--jq '.username'` case); everything else is pretty-printed JSON.
+/// Render one filter output. Strings print raw; everything else is pretty JSON.
 pub fn render(value: &Value) -> Result<String> {
     match value {
         Value::String(s) => Ok(s.clone()),
@@ -68,6 +71,18 @@ mod tests {
         let input = serde_json::json!([1, 2, 3]);
         let out = run("length", input).unwrap();
         assert_eq!(out, vec![Value::from(3)]);
+    }
+
+    #[test]
+    fn iterates_array() {
+        let input = serde_json::json!([
+            {"title": "first"},
+            {"title": "second"},
+            {"title": "third"},
+        ]);
+        let out = run(".[] | .title", input).unwrap();
+        let titles: Vec<String> = out.iter().map(|v| render(v).unwrap()).collect();
+        assert_eq!(titles, vec!["first", "second", "third"]);
     }
 
     #[test]

@@ -105,6 +105,7 @@ impl From<ApiError> for CliError {
     fn from(e: ApiError) -> Self {
         match e {
             ApiError::Auth { hint } => CliError::Auth(hint),
+            ApiError::RateLimit { retry_after_secs } => CliError::RateLimit { retry_after_secs },
             ApiError::Response(r) if r.status == reqwest::StatusCode::NOT_FOUND => {
                 CliError::NotFound(format!("{}: {}", r.url, r.message))
             }

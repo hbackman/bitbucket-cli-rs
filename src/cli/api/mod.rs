@@ -12,11 +12,11 @@ use reqwest::Method;
 use serde_json::Value;
 
 use crate::api::{self, cache, Transport};
+use crate::cli::jq;
 use crate::context::Context;
 use crate::error::CliError;
 
 pub mod fields;
-pub mod jq;
 pub mod pagination;
 
 use fields::Field;

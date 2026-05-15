@@ -1,6 +1,12 @@
 use std::io::{self, IsTerminal, Read, Write};
 use std::sync::{Arc, Mutex};
 
+use owo_colors::OwoColorize;
+
+pub mod table;
+
+pub use table::{Column, TablePrinter};
+
 pub struct IoStreams {
     stdin: Box<dyn Read + Send>,
     stdout: Box<dyn Write + Send>,
@@ -76,6 +82,26 @@ impl IoStreams {
         self.is_stdin_tty
     }
 
+    /// Borrowed view of the active color scheme. Cheap to copy.
+    pub fn cs(&self) -> ColorScheme {
+        ColorScheme {
+            enabled: self.color_enabled,
+        }
+    }
+
+    /// Test helper — marks stdout as a TTY without giving up the in-memory buffer.
+    /// Lets renderers exercise their TTY path under `cargo test`.
+    #[cfg(test)]
+    pub fn force_stdout_tty(&mut self, tty: bool) {
+        self.is_stdout_tty = tty;
+    }
+
+    /// Test helper — toggles color independently of TTY detection.
+    #[cfg(test)]
+    pub fn force_color(&mut self, on: bool) {
+        self.color_enabled = on;
+    }
+
     /// Pager support is post-MVP; left as a no-op so call sites compile.
     pub fn start_pager(&mut self) -> io::Result<()> {
         Ok(())
@@ -127,15 +153,138 @@ impl Read for SharedReader {
 }
 
 fn detect_color(is_stdout_tty: bool) -> bool {
+    // CLICOLOR_FORCE wins outright (per https://bixense.com/clicolors).
+    if std::env::var_os("CLICOLOR_FORCE").is_some_and(|v| v != "0") {
+        return true;
+    }
     // NO_COLOR (https://no-color.org) disables color when set to any value.
     if std::env::var_os("NO_COLOR").is_some() {
         return false;
     }
-    // CLICOLOR_FORCE forces color even when stdout isn't a TTY.
-    if std::env::var_os("CLICOLOR_FORCE").is_some_and(|v| v != "0") {
-        return true;
+    if std::env::var_os("CLICOLOR").is_some_and(|v| v == "0") {
+        return false;
     }
     is_stdout_tty
+}
+
+/// Thin facade over `owo-colors` that respects the active color setting.
+///
+/// Methods return owned `String`s and pass input through unchanged when color is
+/// disabled, which means callers never have to branch on `color_enabled` themselves.
+#[derive(Debug, Clone, Copy)]
+pub struct ColorScheme {
+    enabled: bool,
+}
+
+impl ColorScheme {
+    pub fn new(enabled: bool) -> Self {
+        Self { enabled }
+    }
+
+    pub fn enabled(&self) -> bool {
+        self.enabled
+    }
+
+    pub fn red<S: AsRef<str>>(&self, s: S) -> String {
+        if self.enabled {
+            format!("{}", s.as_ref().red())
+        } else {
+            s.as_ref().to_string()
+        }
+    }
+
+    pub fn green<S: AsRef<str>>(&self, s: S) -> String {
+        if self.enabled {
+            format!("{}", s.as_ref().green())
+        } else {
+            s.as_ref().to_string()
+        }
+    }
+
+    pub fn yellow<S: AsRef<str>>(&self, s: S) -> String {
+        if self.enabled {
+            format!("{}", s.as_ref().yellow())
+        } else {
+            s.as_ref().to_string()
+        }
+    }
+
+    pub fn cyan<S: AsRef<str>>(&self, s: S) -> String {
+        if self.enabled {
+            format!("{}", s.as_ref().cyan())
+        } else {
+            s.as_ref().to_string()
+        }
+    }
+
+    pub fn gray<S: AsRef<str>>(&self, s: S) -> String {
+        if self.enabled {
+            format!("{}", s.as_ref().bright_black())
+        } else {
+            s.as_ref().to_string()
+        }
+    }
+
+    pub fn magenta<S: AsRef<str>>(&self, s: S) -> String {
+        if self.enabled {
+            format!("{}", s.as_ref().magenta())
+        } else {
+            s.as_ref().to_string()
+        }
+    }
+
+    pub fn blue<S: AsRef<str>>(&self, s: S) -> String {
+        if self.enabled {
+            format!("{}", s.as_ref().blue())
+        } else {
+            s.as_ref().to_string()
+        }
+    }
+
+    pub fn bold<S: AsRef<str>>(&self, s: S) -> String {
+        if self.enabled {
+            format!("{}", s.as_ref().bold())
+        } else {
+            s.as_ref().to_string()
+        }
+    }
+
+    pub fn success_icon(&self) -> String {
+        let icon = if use_unicode(self.enabled) { "✓" } else { "v" };
+        self.green(icon)
+    }
+
+    pub fn failure_icon(&self) -> String {
+        let icon = if use_unicode(self.enabled) { "✗" } else { "x" };
+        self.red(icon)
+    }
+
+    pub fn warning_icon(&self) -> String {
+        self.yellow("!")
+    }
+
+    pub fn neutral_icon(&self) -> String {
+        "-".to_string()
+    }
+}
+
+fn use_unicode(color_enabled: bool) -> bool {
+    if color_enabled {
+        return true;
+    }
+    for var in ["LC_ALL", "LC_CTYPE", "LANG"] {
+        if let Ok(v) = std::env::var(var) {
+            let v = v.to_lowercase();
+            if v.contains("utf-8") || v.contains("utf8") {
+                return true;
+            }
+            if !v.is_empty() {
+                return false;
+            }
+        }
+    }
+    // No locale env set — assume UTF-8 is fine on modern systems.
+    true
 }
 
 #[cfg(test)]
@@ -165,5 +314,21 @@ mod tests {
         let mut out = String::new();
         io.input().read_to_string(&mut out).unwrap();
         assert_eq!(out, "input bytes");
+    }
+
+    #[test]
+    fn color_scheme_passthrough_when_disabled() {
+        let cs = ColorScheme::new(false);
+        assert_eq!(cs.red("hi"), "hi");
+        assert_eq!(cs.green("hi"), "hi");
+        assert_eq!(cs.bold("hi"), "hi");
+    }
+
+    #[test]
+    fn color_scheme_wraps_when_enabled() {
+        let cs = ColorScheme::new(true);
+        let red = cs.red("hi");
+        assert!(red.contains("\u{1b}["), "expected ANSI escape, got {red:?}");
+        assert!(red.contains("hi"));
     }
 }

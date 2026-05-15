@@ -13,7 +13,7 @@ Each spec is **self-contained and imperative**: a fresh session given "Read `doc
 | 04 | [API client](04-api-client.md) | HTTP, pagination, retry, errors, `bb api` |
 | 05 | [Output](05-output.md) | TTY detection, tables, `--json`, `--jq`, exit codes |
 | 06 | [PR commands](06-commands-pr.md) | Every `bb pr` subcommand |
-| 07 | [Repo & misc commands](07-commands-repo.md) | `bb repo …`, `bb browse`, `bb version`, `bb completion` |
+| 07 | [Repo & misc commands](07-commands-repo.md) | `bb repo …`, `bb version`, `bb completion` (`bb browse` cut — see spec 07) |
 | 08 | [Distribution](08-distribution.md) | Build, release, Homebrew, versioning |
 | 09 | [MCP server](09-mcp-server.md) | `bb mcp serve` — expose Bitbucket as MCP tools, reusing OAuth tokens. Post-0.1. |
 
@@ -27,9 +27,9 @@ Roughly:
 | 2 | **03-configuration** — config files, env vars, repo resolution. | ✅ Done |
 | 3 | **02-authentication** — OAuth flow, token storage, `bb auth …` commands. | ✅ Done |
 | 4 | **04-api-client** — typed REST client, `bb api`. | ✅ Done |
-| 5 | **05-output** — `--json`, `--jq`, tables, TTY detection. | ⏭ Next |
-| 6 | **07-commands-repo** — `bb repo view/list/clone/create/fork`, `bb browse`, `bb version`. | pending |
-| 7 | **06-commands-pr** — PR commands; the bulk of the surface. | pending |
+| 5 | **05-output** — `--json`, `--jq`, tables, TTY detection. | ✅ Done |
+| 6 | **07-commands-repo** — `bb repo view/list/clone/create/fork/set-default`, `bb version`, `bb completion`. (`bb browse` cut — see spec 07.) | ✅ Done |
+| 7 | **06-commands-pr** — PR commands; the bulk of the surface. | ⏭ Next |
 | 8 | **08-distribution** — `cargo-dist`, Homebrew tap, releases. **0.1 ships here.** | pending |
 | 9 | **09-mcp-server** — MCP server. Starts after 0.1 lands; targets 0.2. | pending |
 
@@ -40,7 +40,7 @@ Specs 02 and 03 can technically be done in parallel; everything else builds on t
 Paste this into a fresh session to pick up the next slice:
 
 ```
-Read docs/specs/00-overview.md, docs/specs/01-architecture.md, docs/specs/02-authentication.md, docs/specs/03-configuration.md, docs/specs/04-api-client.md, and docs/specs/05-output.md, then follow 05's instructions.
+Read docs/specs/00-overview.md, docs/specs/01-architecture.md, docs/specs/02-authentication.md, docs/specs/03-configuration.md, docs/specs/04-api-client.md, docs/specs/05-output.md, and docs/specs/06-commands-pr.md, then follow 06's instructions.
 ```
 
 After the slice lands, mark its row ✅ Done and update the "⏭ Next" marker to the row below.

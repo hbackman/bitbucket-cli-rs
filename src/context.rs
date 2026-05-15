@@ -5,6 +5,7 @@ use tokio::sync::OnceCell;
 
 use crate::auth::{AuthSource, Browser, DefaultBrowser, KeyringBackend, SystemKeyring};
 use crate::bbrepo::BbRepo;
+use crate::cli::prompter::{DialoguerPrompter, Prompter};
 use crate::config::Config;
 use crate::error::CliError;
 use crate::iostreams::IoStreams;
@@ -51,6 +52,10 @@ pub struct Context {
 
     /// OS keyring backend. Tests pre-seed with `MemKeyring`.
     pub keyring: OnceLock<Arc<dyn KeyringBackend>>,
+
+    /// Interactive prompter. Tests pre-seed with `MockPrompter`; production
+    /// shells out to `dialoguer`.
+    pub prompter: OnceLock<Arc<dyn Prompter>>,
 }
 
 impl Context {
@@ -65,6 +70,7 @@ impl Context {
             base_repo: OnceCell::new(),
             browser: OnceLock::new(),
             keyring: OnceLock::new(),
+            prompter: OnceLock::new(),
         }
     }
 
@@ -84,6 +90,13 @@ impl Context {
     pub fn keyring(&self) -> Arc<dyn KeyringBackend> {
         self.keyring
             .get_or_init(|| Arc::new(SystemKeyring) as Arc<dyn KeyringBackend>)
+            .clone()
+    }
+
+    /// Pluggable prompter (tests pre-seed; production uses `dialoguer`).
+    pub fn prompter(&self) -> Arc<dyn Prompter> {
+        self.prompter
+            .get_or_init(|| Arc::new(DialoguerPrompter) as Arc<dyn Prompter>)
             .clone()
     }
 
@@ -148,6 +161,7 @@ impl Context {
             base_repo: OnceCell::new(),
             browser: OnceLock::new(),
             keyring: OnceLock::new(),
+            prompter: OnceLock::new(),
         };
         (ctx, bufs)
     }

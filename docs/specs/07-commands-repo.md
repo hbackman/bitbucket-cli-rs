@@ -2,7 +2,7 @@
 
 **Status:** Draft (Rust)
 **Depends on:** [`01-architecture.md`](01-architecture.md), [`02-authentication.md`](02-authentication.md), [`03-configuration.md`](03-configuration.md), [`04-api-client.md`](04-api-client.md), [`05-output.md`](05-output.md)
-**Slice goal:** All `bb repo …` subcommands plus the small utility commands (`bb browse`, `bb version`, `bb completion`) work end-to-end.
+**Slice goal:** All `bb repo …` subcommands plus the small utility commands (`bb version`, `bb completion`) work end-to-end.
 
 ## Commands in this slice
 
@@ -13,10 +13,14 @@ bb repo clone       WS/REPO     [DIR] [-- git-args]
 bb repo create      [NAME]                [flags]
 bb repo fork        [WS/REPO]              [flags]
 bb repo set-default [WS/REPO]              [flags]
-bb browse           [N | path]              [flags]
 bb version
 bb completion       <bash|zsh|fish|powershell>
 ```
+
+> **Dropped:** `bb browse` was scoped here originally but cut to keep the
+> surface lean. Re-add if user demand appears. `bb repo view --web` covers the
+> common "open this repo" case; everything else (`--pulls`, `--settings`, file
+> URLs) was speculative.
 
 ## `bb repo view`
 
@@ -167,34 +171,6 @@ Flags:
 
 Interactive mode: read all Bitbucket remotes from the current git repo and prompt the user to select one.
 
-## `bb browse`
-
-Open a Bitbucket URL related to the current repo.
-
-```
-bb browse                           # open repo home
-bb browse 42                        # open PR #42
-bb browse path/to/file.rs           # open file at current branch
-bb browse path/to/file.rs:42        # open file at specific line
-bb browse --branch feature/x        # open repo on branch
-bb browse --pulls                   # open PRs list
-bb browse --commit SHA              # open commit
-bb browse --settings                # open settings
-```
-
-```
-Flags:
-      --branch <BRANCH>
-      --commit <SHA>
-  -n, --no-browser     Print URL instead of opening
-  -p, --projects       (no-op for Bitbucket; reserved)
-      --pulls
-      --settings
-      --wiki           Open repo wiki if exists
-```
-
-URLs are constructed against the current repo via `ctx.base_repo().await?` and opened via the `Browser` trait from spec 02 (`webbrowser` crate under the hood).
-
 ## `bb version`
 
 Already partially implemented in spec 01. Extend to two output modes:
@@ -252,7 +228,6 @@ src/cli/repo/
 ├── set_default.rs
 └── display.rs
 
-src/cli/browse.rs             # full impl (replaces the spec-01 stub)
 src/cli/version.rs            # already in place; extended with --json + update check
 src/cli/completion.rs         # new
 
@@ -268,10 +243,10 @@ The single-file `src/cli/repo.rs` stub from spec 01 is promoted to a directory m
 ```toml
 clap_complete = "4"
 semver        = "1"
-webbrowser    = "1"
 ```
 
-`webbrowser` is also pulled in by spec 02.
+(`webbrowser` is pulled in by spec 02 for the OAuth flow and reused by `bb
+repo view --web`.)
 
 ## Tests
 
@@ -280,7 +255,6 @@ webbrowser    = "1"
 - `repo clone`: URL synthesis from `git_protocol`; `upstream` remote added when fork.
 - `repo create`: each flag combination produces correct body; `--source --push` invokes git correctly.
 - `repo fork`: poll loop; `git remote` mutation.
-- `browse`: each flag/path-form generates the right URL; `-n` prints to stdout.
 - `version`: update notifier respects cache + `BB_NO_UPDATE_NOTIFIER`.
 - `completion`: each shell flag produces non-empty output.
 
@@ -288,15 +262,13 @@ webbrowser    = "1"
 
 1. All modules above with full implementations.
 2. Update notifier under `src/update/`.
-3. Path/line parsing for `bb browse path.rs:42`.
-4. `clap_complete`-backed completion for all supported shells.
-5. Wire `repo`, `browse`, `version`, `completion` into `src/cli/mod.rs` (replacing the stubs).
-6. Tests as listed above.
+3. `clap_complete`-backed completion for all supported shells.
+4. Wire `repo`, `version`, `completion` into `src/cli/mod.rs` (replacing the stubs).
+5. Tests as listed above.
 
 ## Acceptance criteria
 
 - `bb repo view`, `bb repo list`, `bb repo clone <ws/r>`, `bb repo create my-test --private`, `bb repo fork <ws/r>`, `bb repo set-default <ws/r>` all work against live Bitbucket Cloud.
-- `bb browse 42` opens the PR; `bb browse path.rs:42 --no-browser` prints `https://bitbucket.org/ws/repo/src/<branch>/path.rs#lines-42`.
 - `bb version` prints version and triggers a check at most once per 24h.
 - `bb completion zsh > /tmp/_bb && source /tmp/_bb && bb pr <Tab>` offers PR subcommands.
 - All commands support `--json` + `--jq` where listed.
@@ -305,4 +277,3 @@ webbrowser    = "1"
 
 - Whether `bb repo clone` should set up `upstream` for *all* forks by default (gh's behavior) or require a flag. **Lean: gh-parity**, set it up by default with `--no-upstream` to skip.
 - Whether the update notifier should detect cargo / homebrew install paths and message accordingly. **Lean: yes** — covered above.
-- Whether `bb browse` should support GitHub-style `<commit>:<file>` syntax. **Lean: no** in MVP; keep flag-based.

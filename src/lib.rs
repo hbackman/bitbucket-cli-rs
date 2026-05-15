@@ -13,3 +13,4 @@ pub mod error;
 pub mod git;
 pub mod iostreams;
 pub mod text;
+pub mod update;

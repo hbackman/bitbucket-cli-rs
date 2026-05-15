@@ -32,7 +32,6 @@ fn help_lists_core_subcommands() {
         .stdout(predicate::str::contains("repo"))
         .stdout(predicate::str::contains("pr"))
         .stdout(predicate::str::contains("api"))
-        .stdout(predicate::str::contains("browse"))
         .stdout(predicate::str::contains("config"))
         .stdout(predicate::str::contains("version"));
 }

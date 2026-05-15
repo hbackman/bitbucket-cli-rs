@@ -21,6 +21,14 @@ pub enum CliError {
     #[error("not found: {0}")]
     NotFound(String),
 
+    /// Rate-limited and exhausted our retry budget. Exit code 5.
+    #[error("rate limited (retry after {retry_after_secs}s)")]
+    RateLimit { retry_after_secs: u64 },
+
+    /// Interactive prompt was cancelled (Ctrl-C). Exit code 6.
+    #[error("cancelled")]
+    Cancel,
+
     /// Stub for not-yet-implemented commands.
     #[error("not yet implemented")]
     NotImplemented,
@@ -36,6 +44,8 @@ impl CliError {
             CliError::Flag(_) => 2,
             CliError::NotFound(_) => 3,
             CliError::Auth(_) => 4,
+            CliError::RateLimit { .. } => 5,
+            CliError::Cancel => 6,
             CliError::NotImplemented | CliError::Silent | CliError::Other(_) => 1,
         }
     }
@@ -53,6 +63,10 @@ pub fn report(err: CliError) -> ExitCode {
         CliError::Flag(msg) => eprintln!("bb: {msg}"),
         CliError::NotFound(msg) => eprintln!("bb: not found: {msg}"),
         CliError::Auth(msg) => eprintln!("bb: authentication: {msg}"),
+        CliError::RateLimit { retry_after_secs } => {
+            eprintln!("bb: rate limited; retry after {retry_after_secs}s")
+        }
+        CliError::Cancel => eprintln!("bb: cancelled"),
         CliError::NotImplemented => eprintln!("bb: not yet implemented"),
         CliError::Other(e) => eprintln!("bb: {e:#}"),
     }
@@ -68,6 +82,8 @@ mod tests {
         assert_eq!(CliError::Flag("x".into()).exit_code(), 2);
         assert_eq!(CliError::NotFound("x".into()).exit_code(), 3);
         assert_eq!(CliError::Auth("x".into()).exit_code(), 4);
+        assert_eq!(CliError::RateLimit { retry_after_secs: 7 }.exit_code(), 5);
+        assert_eq!(CliError::Cancel.exit_code(), 6);
         assert_eq!(CliError::NotImplemented.exit_code(), 1);
         assert_eq!(CliError::Silent.exit_code(), 1);
         assert_eq!(CliError::Other(anyhow::anyhow!("x")).exit_code(), 1);

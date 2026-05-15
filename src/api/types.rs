@@ -60,6 +60,9 @@ pub struct Repository {
     pub owner: Option<Actor>,
     #[serde(default)]
     pub links: Option<serde_json::Value>,
+    /// Present when this repo is a fork; carries the parent's `full_name`.
+    #[serde(default)]
+    pub parent: Option<RepoRef>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

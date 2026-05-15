@@ -27,6 +27,8 @@ pub struct ListOpts {
     pub pagelen: Option<u32>,
     /// Sparse-fieldset selector (`?fields=`).
     pub fields: Option<String>,
+    /// `?sort=` field, e.g. `-updated_on`.
+    pub sort: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Default)]
@@ -54,6 +56,25 @@ pub struct MainBranchInput {
     pub name: String,
     #[serde(rename = "type")]
     pub kind: &'static str,
+}
+
+/// `POST /repositories/{ws}/{repo}/forks` body.
+#[derive(Debug, Clone, Serialize, Default)]
+pub struct ForkInput {
+    /// Override the fork repo name. Defaults to the parent's slug.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    /// Target workspace for the fork. Defaults to the current user's workspace.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub workspace: Option<WorkspaceRef>,
+    /// When true, only the default branch is forked. Bitbucket-specific flag.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fork_policy: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct WorkspaceRef {
+    pub slug: String,
 }
 
 impl CreateRepo {
@@ -86,6 +107,9 @@ impl RepositoryService {
             if let Some(v) = opts.fields.as_deref() {
                 q.append_pair("fields", v);
             }
+            if let Some(v) = opts.sort.as_deref() {
+                q.append_pair("sort", v);
+            }
         }
         Paginated::new(self.transport.clone(), url.to_string())
     }
@@ -113,6 +137,53 @@ impl RepositoryService {
             .build()
             .map_err(ApiError::Network)?;
         self.transport.send_json(req).await
+    }
+
+    /// `POST /2.0/repositories/{workspace}/{slug}/forks` — fork a repo.
+    pub async fn fork(&self, repo: &BbRepo, input: &ForkInput) -> Result<Repository, ApiError> {
+        let url = self
+            .base
+            .join(&format!(
+                "repositories/{}/{}/forks",
+                repo.workspace, repo.slug
+            ))
+            .map_err(|e| ApiError::Auth {
+                hint: format!("invalid URL: {e}"),
+            })?;
+        let req = self
+            .transport
+            .http
+            .post(url)
+            .json(input)
+            .build()
+            .map_err(ApiError::Network)?;
+        self.transport.send_json(req).await
+    }
+
+    /// `GET /2.0/repositories/{workspace}/{slug}/src/{ref}/{path}` — raw file contents.
+    pub async fn read_source(
+        &self,
+        repo: &BbRepo,
+        rev: &str,
+        path: &str,
+    ) -> Result<bytes::Bytes, ApiError> {
+        let url = self
+            .base
+            .join(&format!(
+                "repositories/{}/{}/src/{rev}/{path}",
+                repo.workspace, repo.slug,
+            ))
+            .map_err(|e| ApiError::Auth {
+                hint: format!("invalid URL: {e}"),
+            })?;
+        let req = self
+            .transport
+            .http
+            .get(url)
+            .build()
+            .map_err(ApiError::Network)?;
+        let resp = self.transport.send(req).await?;
+        Ok(resp.body)
     }
 
     /// `DELETE /2.0/repositories/{workspace}/{slug}`.

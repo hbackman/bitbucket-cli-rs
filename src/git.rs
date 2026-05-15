@@ -73,6 +73,82 @@ pub async fn repo_root() -> Result<PathBuf> {
     Ok(PathBuf::from(out.trim()))
 }
 
+/// Returns the set of remote names defined in the current repo.
+pub async fn list_remotes() -> Result<Vec<String>> {
+    let out = run(&["remote"]).await?;
+    Ok(out.lines().map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).collect())
+}
+
+pub async fn remote_add(name: &str, url: &str) -> Result<()> {
+    run(&["remote", "add", name, url]).await.map(|_| ())
+}
+
+pub async fn remote_rename(from: &str, to: &str) -> Result<()> {
+    run(&["remote", "rename", from, to]).await.map(|_| ())
+}
+
+pub async fn config_set_local(key: &str, value: &str) -> Result<()> {
+    run(&["config", "--local", key, value]).await.map(|_| ())
+}
+
+pub async fn config_unset_local(key: &str) -> Result<()> {
+    match run(&["config", "--local", "--unset", key]).await {
+        Ok(_) => Ok(()),
+        Err(e) => {
+            // exit 5 = key not found.
+            if e.to_string().contains("exit 5") {
+                Ok(())
+            } else {
+                Err(e)
+            }
+        }
+    }
+}
+
+/// Initialize a new git repo in `dir` (no-op if it's already a repo).
+pub async fn init(dir: &std::path::Path) -> Result<()> {
+    run(&["-C", dir.to_string_lossy().as_ref(), "init"]).await.map(|_| ())
+}
+
+/// `git push -u <remote> <branch>` from `dir`.
+pub async fn push_set_upstream(dir: &std::path::Path, remote: &str, branch: &str) -> Result<()> {
+    run(&[
+        "-C",
+        dir.to_string_lossy().as_ref(),
+        "push",
+        "-u",
+        remote,
+        branch,
+    ])
+    .await
+    .map(|_| ())
+}
+
+/// `git remote add <name> <url>` inside `dir`.
+pub async fn remote_add_in(dir: &std::path::Path, name: &str, url: &str) -> Result<()> {
+    run(&[
+        "-C",
+        dir.to_string_lossy().as_ref(),
+        "remote",
+        "add",
+        name,
+        url,
+    ])
+    .await
+    .map(|_| ())
+}
+
+/// Clone a repo. Extra args are passed through verbatim (for `--depth 1` etc.).
+pub async fn clone(url: &str, dir: Option<&str>, extra: &[String]) -> Result<()> {
+    let mut args = vec!["clone".to_string(), url.to_string()];
+    if let Some(d) = dir {
+        args.push(d.to_string());
+    }
+    args.extend(extra.iter().cloned());
+    let refs: Vec<&str> = args.iter().map(String::as_str).collect();
+    run(&refs).await.map(|_| ())
+}
+
 async fn run(args: &[&str]) -> Result<String> {
     let output = Command::new("git")
         .args(args)

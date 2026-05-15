@@ -5,9 +5,13 @@ use crate::error::CliError;
 
 pub mod api;
 pub mod auth;
-pub mod browse;
+pub mod completion;
 pub mod config;
+pub mod jq;
+pub mod json_flags;
+pub mod messages;
 pub mod pr;
+pub mod prompter;
 pub mod repo;
 pub mod version;
 
@@ -50,12 +54,12 @@ pub enum Command {
     Pr(pr::PrArgs),
     /// Make an authenticated request to the Bitbucket REST API.
     Api(api::ApiArgs),
-    /// Open a Bitbucket page in the browser.
-    Browse(browse::BrowseArgs),
     /// Manage configuration.
     Config(config::ConfigArgs),
     /// Print version information.
-    Version,
+    Version(version::VersionArgs),
+    /// Generate shell completion scripts.
+    Completion(completion::CompletionArgs),
 }
 
 pub async fn run(mut ctx: Context) -> Result<(), CliError> {
@@ -66,8 +70,8 @@ pub async fn run(mut ctx: Context) -> Result<(), CliError> {
         Command::Repo(a) => repo::run(a, &mut ctx).await,
         Command::Pr(a) => pr::run(a, &mut ctx).await,
         Command::Api(a) => api::run(a, &mut ctx).await,
-        Command::Browse(a) => browse::run(a, &mut ctx).await,
         Command::Config(a) => config::run(a, &mut ctx).await,
-        Command::Version => version::run(&mut ctx).await,
+        Command::Version(a) => version::run_with(a, &mut ctx).await,
+        Command::Completion(a) => completion::run(a, &mut ctx).await,
     }
 }
