@@ -199,30 +199,45 @@ async fn resolve_base_repo(ctx: &Context) -> Result<BbRepo, CliError> {
         }
     }
 
-    // 4-5. git remote origin / upstream. We take the workspace/slug from the
-    // remote and ignore its host — bbk only ever talks to the configured
-    // Bitbucket host, so a github.com / gitlab.com / etc. remote is treated as
-    // a workspace/slug shortcut. The user gets a Bitbucket-side 404 if no such
-    // repo exists there.
+    // 4-5. git remote origin / upstream. Only accept remotes whose host matches
+    // the configured Bitbucket host — otherwise we'd silently send github.com
+    // workspace/slug shortcuts to bitbucket.org and produce confusing 404s.
     let default_host = ctx
         .config_loaded()
         .await
         .map(|c| c.get_or_default("default_host"))
         .unwrap_or_else(|_| crate::config::DEFAULT_HOST.to_string());
+    let mut foreign_remote: Option<(String, String)> = None; // (remote_name, host)
     for remote in ["origin", "upstream"] {
         if let Ok(url) = crate::git::remote_url(remote).await {
             if !url.is_empty() {
-                if let Ok(mut repo) = BbRepo::parse_remote(&url) {
-                    repo.host = default_host.clone();
-                    return Ok(repo);
+                if let Ok(repo) = BbRepo::parse_remote(&url) {
+                    if repo.host == default_host {
+                        return Ok(repo);
+                    }
+                    foreign_remote.get_or_insert_with(|| (remote.into(), repo.host.clone()));
                 }
             }
         }
     }
 
-    Err(CliError::Flag(
-        "no repository specified — use --repo or `bbk repo set-default`".into(),
-    ))
+    Err(CliError::Flag(no_repo_message(foreign_remote, &default_host)))
+}
+
+fn no_repo_message(foreign: Option<(String, String)>, default_host: &str) -> String {
+    let header = match foreign {
+        Some((remote, host)) => format!(
+            "this command needs a Bitbucket repository, but `{remote}` points at {host} (bbk only talks to {default_host})."
+        ),
+        None => "this command needs a Bitbucket repository, but none could be determined.".to_string(),
+    };
+    format!(
+        "{header}\n\n\
+         To run against a specific repo without pinning the clone:\n  \
+         bbk <command> --repo WORKSPACE/REPO\n\n\
+         To pin this clone to a Bitbucket repo permanently:\n  \
+         bbk repo set-default WORKSPACE/REPO"
+    )
 }
 
 #[cfg(test)]
