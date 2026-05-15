@@ -112,7 +112,11 @@ async fn list_accessible_to_user(
     // The replacement: enumerate the user's workspaces, then list repos in each
     // (`GET /2.0/repositories/{workspace}?role=…`) and concatenate. We stop early
     // once we've collected `limit` repos.
-    let role = args.role.as_deref().filter(|s| !s.is_empty()).map(str::to_string);
+    let role = args
+        .role
+        .as_deref()
+        .filter(|s| !s.is_empty())
+        .map(str::to_string);
     let limit = args.limit as usize;
 
     let memberships = client.workspaces().list().collect(0).await?;
