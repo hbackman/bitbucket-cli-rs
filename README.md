@@ -19,17 +19,28 @@ through an escape hatch — all from a single static binary.
 
 ## Install
 
-### macOS / Linux (Homebrew)
+### macOS / Linux
 
 ```sh
-brew install hbackman/bbk/bbk
+curl --proto '=https' --tlsv1.2 -LsSf \
+  https://github.com/hbackman/bitbucket-cli-rs/releases/latest/download/bbk-installer.sh | sh
+```
+
+The installer detects your OS and architecture (Intel/Apple Silicon on macOS;
+x86_64/aarch64 on Linux), downloads the matching tarball from the latest
+GitHub release, and places `bbk` under `$CARGO_HOME/bin` (or `~/.cargo/bin`).
+
+### Windows (PowerShell)
+
+```powershell
+powershell -ExecutionPolicy Bypass -c "irm https://github.com/hbackman/bitbucket-cli-rs/releases/latest/download/bbk-installer.ps1 | iex"
 ```
 
 ### Manually
 
-Download the latest release for your platform from
-<https://github.com/hbackman/bitbucket-cli-rs/releases/latest> and extract the
-`bbk` binary into a directory on your `$PATH`.
+Download the tarball for your platform from
+<https://github.com/hbackman/bitbucket-cli-rs/releases/latest>, extract it,
+and place `bbk` somewhere on your `$PATH`.
 
 On macOS, if Gatekeeper blocks the binary after a manual download, clear the
 quarantine attribute:
