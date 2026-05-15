@@ -242,7 +242,11 @@ fn render_table(ctx: &mut Context, prs: &[PullRequest]) -> Result<(), CliError> 
         let state = pr.state.as_deref().unwrap_or("OPEN");
         let icon = state_icon(state, &cs);
         let id = format!("#{}", pr.id);
-        let title = truncate(&pr.title, 60);
+        let title = if pr.draft {
+            format!("{} {}", cs.gray("(draft)"), truncate(&pr.title, 52))
+        } else {
+            truncate(&pr.title, 60)
+        };
         let branch = source_branch(pr).unwrap_or_default();
         let updated = pr
             .updated_on
