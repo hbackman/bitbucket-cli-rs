@@ -1,5 +1,5 @@
 //! `bbk auth ...` — login, logout, status, token, refresh, switch, setup-git,
-//! git-credential. Spec: `docs/specs/02-authentication.md`.
+//! git-credential.
 
 use clap::{Args, Subcommand};
 

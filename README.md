@@ -85,11 +85,6 @@ cargo build --release
 ./target/release/bbk --version
 ```
 
-## Specs
-
-Design lives in [`docs/specs/`](docs/specs/). Start with
-[`00-overview.md`](docs/specs/00-overview.md).
-
 ## License
 
 MIT — see [LICENSE](LICENSE).

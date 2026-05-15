@@ -1,7 +1,5 @@
 //! Bitbucket REST API client.
 //!
-//! Spec: `docs/specs/04-api-client.md`.
-//!
 //! Three layers:
 //! 1. [`Transport`] — auth header injection, 429 / 401-refresh retries, error
 //!    envelope parsing, debug logging.

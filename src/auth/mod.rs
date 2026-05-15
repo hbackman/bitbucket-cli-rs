@@ -1,7 +1,5 @@
 //! Authentication: OAuth flow, API-token ingestion, token storage, token refresh,
 //! and the git-credential helper.
-//!
-//! Spec: `docs/specs/02-authentication.md`.
 
 use std::sync::Arc;
 
