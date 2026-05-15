@@ -149,6 +149,18 @@ impl<'a> TablePrinter<'a> {
             }
         }
 
+        // Dim rule under the header: one ─ per column-width cell, gutter spaces
+        // left as-is so the rule visually segments columns the same way the
+        // header does.
+        for (i, w) in widths.iter().enumerate().take(col_count) {
+            let bar = cs.gray("─".repeat(*w));
+            if i + 1 == col_count {
+                writeln!(out, "{bar}")?;
+            } else {
+                write!(out, "{bar}{}", " ".repeat(gutter))?;
+            }
+        }
+
         // Data rows.
         for row in &rows {
             for (i, w) in widths.iter().enumerate().take(col_count) {
@@ -249,8 +261,10 @@ mod tests {
         let out = bufs.stdout_string();
         let lines: Vec<&str> = out.lines().collect();
         assert_eq!(lines[0], "NUMBER  TITLE");
-        assert_eq!(lines[1], "1       Hello");
-        assert_eq!(lines[2], "234     Goodbye");
+        // Line 1 is the dim ─ rule (each cell width filled with ─, gutter preserved).
+        assert_eq!(lines[1], "──────  ───────");
+        assert_eq!(lines[2], "1       Hello");
+        assert_eq!(lines[3], "234     Goodbye");
     }
 
     #[test]
@@ -262,7 +276,8 @@ mod tests {
         t.add_row(["1", "abcdefghijklmnop"]);
         t.render().unwrap();
         let out = bufs.stdout_string();
-        let row = out.lines().nth(1).unwrap();
+        // Skip header (line 0) and rule (line 1) — data starts at line 2.
+        let row = out.lines().nth(2).unwrap();
         // 1 + two spaces gutter + truncated title (9 wide ending in …) = 12 cells.
         assert!(row.starts_with("1  "));
         assert!(row.ends_with('…'));
