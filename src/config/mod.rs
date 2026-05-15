@@ -181,15 +181,11 @@ fn validate(key: &str, value: &str) -> Result<()> {
         bail!("unknown key '{key}'");
     }
     match key {
-        "git_protocol" => {
-            if !matches!(value, "https" | "ssh") {
-                bail!("invalid value for git_protocol: '{value}' (must be 'https' or 'ssh')");
-            }
+        "git_protocol" if !matches!(value, "https" | "ssh") => {
+            bail!("invalid value for git_protocol: '{value}' (must be 'https' or 'ssh')");
         }
-        "prompt" => {
-            if !matches!(value, "enabled" | "disabled") {
-                bail!("invalid value for prompt: '{value}' (must be 'enabled' or 'disabled')");
-            }
+        "prompt" if !matches!(value, "enabled" | "disabled") => {
+            bail!("invalid value for prompt: '{value}' (must be 'enabled' or 'disabled')");
         }
         _ => {}
     }
