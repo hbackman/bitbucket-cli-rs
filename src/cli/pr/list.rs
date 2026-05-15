@@ -233,6 +233,7 @@ fn render_table(ctx: &mut Context, prs: &[PullRequest]) -> Result<(), CliError> 
         Column::new(""),
         Column::new("id"),
         Column::new("title").truncatable(),
+        Column::new("reviews"),
         Column::new("branch").truncatable(),
         Column::new("updated"),
     ];
@@ -247,6 +248,7 @@ fn render_table(ctx: &mut Context, prs: &[PullRequest]) -> Result<(), CliError> 
         } else {
             truncate(&pr.title, 60)
         };
+        let reviews = review_summary(pr, &cs);
         let branch = source_branch(pr).unwrap_or_default();
         let updated = pr
             .updated_on
@@ -254,10 +256,33 @@ fn render_table(ctx: &mut Context, prs: &[PullRequest]) -> Result<(), CliError> 
             .and_then(parse_rfc3339)
             .map(rel_time)
             .unwrap_or_default();
-        t.add_row([icon, id, title, branch, updated]);
+        t.add_row([icon, id, title, reviews, branch, updated]);
     }
     t.render().map_err(io_err)?;
     Ok(())
+}
+
+/// Compact review-state summary for a PR row. Returns e.g. `+2` (2 approvals,
+/// green), `!1` (1 changes-requested, red), `+2 !1` if both, or "" if neither.
+fn review_summary(pr: &PullRequest, cs: &crate::iostreams::ColorScheme) -> String {
+    let mut approvals = 0u32;
+    let mut changes_req = 0u32;
+    for p in &pr.participants {
+        if p.approved {
+            approvals += 1;
+        }
+        if p.state.as_deref() == Some("changes_requested") {
+            changes_req += 1;
+        }
+    }
+    let mut parts: Vec<String> = Vec::new();
+    if approvals > 0 {
+        parts.push(cs.green(format!("+{approvals}")));
+    }
+    if changes_req > 0 {
+        parts.push(cs.red(format!("!{changes_req}")));
+    }
+    parts.join(" ")
 }
 
 fn parse_rfc3339(s: &str) -> Option<time::OffsetDateTime> {
