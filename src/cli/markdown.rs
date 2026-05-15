@@ -63,8 +63,12 @@ const EXTERNAL_RENDERERS: &[(&str, &[&str])] = &[
 ];
 
 fn try_renderer(program: &str, args: &[&str], body: &str) -> Option<String> {
+    // CLICOLOR_FORCE=1 makes glow, bat, and most TTY-aware tools emit ANSI
+    // sequences even though we're capturing their stdout via a pipe. Without
+    // it, glow's "-s dark" still strips colors because it sees no TTY.
     let mut child = Command::new(program)
         .args(args)
+        .env("CLICOLOR_FORCE", "1")
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::null())
