@@ -42,12 +42,24 @@ fn render_external(body: &str) -> Option<String> {
 }
 
 /// (program, extra args). Each program reads markdown on stdin and writes
-/// rendered output on stdout. We pass flags that suppress paging and trailing
-/// whitespace where each tool supports it.
+/// rendered output on stdout. We're capturing stdout via a pipe, so we have to
+/// override each tool's "auto" color detection (which would otherwise see the
+/// non-TTY stdout and produce plain text). `glow -s dark` forces the dark
+/// theme; `bat --color=always` forces ANSI even when piped; `mdcat` doesn't
+/// have a force-color flag but respects CLICOLOR_FORCE / NO_COLOR upstream of
+/// it, so it falls through gracefully if env says no.
 const EXTERNAL_RENDERERS: &[(&str, &[&str])] = &[
-    ("glow", &["-s", "auto"]),
-    ("mdcat", &[]),
-    ("bat", &["--language=markdown", "--style=plain", "--paging=never"]),
+    ("glow", &["-s", "dark"]),
+    ("mdcat", &["--columns", "80"]),
+    (
+        "bat",
+        &[
+            "--language=markdown",
+            "--style=plain",
+            "--paging=never",
+            "--color=always",
+        ],
+    ),
 ];
 
 fn try_renderer(program: &str, args: &[&str], body: &str) -> Option<String> {
