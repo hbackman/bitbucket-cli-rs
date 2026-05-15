@@ -117,7 +117,8 @@ fn render_human(ctx: &mut Context, pr: &PullRequest) -> Result<(), CliError> {
     writeln!(ctx.io.out(), "{src} → {dst}").map_err(io_err)?;
 
     let url = pr_html_url(pr).unwrap_or_else(|| fallback_url(ctx, pr));
-    writeln!(ctx.io.out(), "{}: {url}", cs.gray("URL")).map_err(io_err)?;
+    let linked_url = cs.hyperlink(&url, &url);
+    writeln!(ctx.io.out(), "{}: {linked_url}", cs.gray("URL")).map_err(io_err)?;
 
     if !pr.reviewers.is_empty() {
         let names: Vec<String> = pr

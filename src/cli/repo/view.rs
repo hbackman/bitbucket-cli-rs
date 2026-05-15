@@ -112,7 +112,14 @@ async fn render_human(ctx: &mut Context, r: &Repository) -> Result<(), CliError>
         .map(|b| b.name.as_str())
         .unwrap_or("—");
 
-    writeln!(ctx.io.out(), "{}", cs.bold(&r.full_name)).map_err(io_err)?;
+    let url = repo_html_url(r).unwrap_or_default();
+    let title = cs.bold(&r.full_name);
+    let title = if url.is_empty() {
+        title
+    } else {
+        cs.hyperlink(&title, &url)
+    };
+    writeln!(ctx.io.out(), "{title}").map_err(io_err)?;
     let mut line = format!("{visibility} • {branch}");
     if let Some(lang) = &r.language {
         if !lang.is_empty() {

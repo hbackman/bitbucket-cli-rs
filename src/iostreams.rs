@@ -274,6 +274,27 @@ impl ColorScheme {
     pub fn neutral_icon(&self) -> String {
         "-".to_string()
     }
+
+    /// Wrap `label` in an OSC 8 hyperlink escape so terminals that support it
+    /// render the label as a clickable link to `url`. Falls back to plain
+    /// `label` (or `label (url)` for non-color/non-tty output) so users who
+    /// can't click still see the URL.
+    ///
+    /// Emit only when color is enabled — that's our proxy for "this is a real
+    /// terminal that probably supports OSC 8". Terminals that don't recognize
+    /// the escape silently ignore it, but emitting it into a pipe or a dumb
+    /// terminal would just look like garbage.
+    pub fn hyperlink<L: AsRef<str>, U: AsRef<str>>(&self, label: L, url: U) -> String {
+        let label = label.as_ref();
+        let url = url.as_ref();
+        if self.enabled {
+            format!("\x1b]8;;{url}\x1b\\{label}\x1b]8;;\x1b\\")
+        } else if label == url {
+            label.to_string()
+        } else {
+            format!("{label} ({url})")
+        }
+    }
 }
 
 fn use_unicode(color_enabled: bool) -> bool {
