@@ -2,7 +2,7 @@
 //! Linux Secret Service, Windows Credential Manager); tests use the in-memory
 //! `MemKeyring`.
 //!
-//! Keyring "service" is `bb:<host>`; "username" is the Bitbucket account name.
+//! Keyring "service" is `bbk:<host>`; "username" is the Bitbucket account name.
 //! The stored value is a JSON `KeyringBlob` from `crate::auth::KeyringBlob`.
 
 use std::collections::HashMap;
@@ -34,7 +34,7 @@ pub trait KeyringBackend: Send + Sync + std::fmt::Debug {
 }
 
 fn service_for(host: &str) -> String {
-    format!("bb:{host}")
+    format!("bbk:{host}")
 }
 
 /// Real OS keyring backed by the `keyring` crate.

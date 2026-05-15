@@ -1,4 +1,4 @@
-//! `bb repo create` — create a new repository on Bitbucket Cloud.
+//! `bbk repo create` — create a new repository on Bitbucket Cloud.
 
 use std::path::{Path, PathBuf};
 

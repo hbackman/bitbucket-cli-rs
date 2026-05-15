@@ -1,4 +1,4 @@
-//! `bb repo ...` — view, list, clone, create, fork, set-default. Spec:
+//! `bbk repo ...` — view, list, clone, create, fork, set-default. Spec:
 //! `docs/specs/07-commands-repo.md`.
 
 use clap::{Args, Subcommand};

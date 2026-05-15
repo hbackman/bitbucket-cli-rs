@@ -1,4 +1,4 @@
-//! `bb auth status` — show which hosts/users are logged in.
+//! `bbk auth status` — show which hosts/users are logged in.
 
 use clap::Args;
 use time::format_description::well_known::Rfc3339;
@@ -32,7 +32,7 @@ pub async fn run(args: StatusArgs, ctx: &mut Context) -> Result<(), CliError> {
 
     if hosts_list.is_empty() {
         return Err(CliError::Auth(
-            "you are not logged in to any Bitbucket hosts. Run `bb auth login`.".into(),
+            "you are not logged in to any Bitbucket hosts. Run `bbk auth login`.".into(),
         ));
     }
 

@@ -1,7 +1,7 @@
-//! `~/.config/bb/config.yml` — user preferences. Loaded once per invocation,
+//! `~/.config/bbk/config.yml` — user preferences. Loaded once per invocation,
 //! cached in `Context.config`.
 //!
-//! Writes are atomic and preserve unknown keys (so a future `bb` version's keys
+//! Writes are atomic and preserve unknown keys (so a future `bbk` version's keys
 //! aren't clobbered by an older binary).
 
 use std::collections::BTreeMap;
@@ -23,8 +23,8 @@ pub const DEFAULT_HOST: &str = "bitbucket.org";
 const CONFIG_FILE: &str = "config.yml";
 const HOSTS_FILE: &str = "hosts.yml";
 
-/// Keys recognized by `config.yml`. Used for validation (`bb config set` rejects
-/// unknown keys) and `bb config list` (defaults filled in for missing keys).
+/// Keys recognized by `config.yml`. Used for validation (`bbk config set` rejects
+/// unknown keys) and `bbk config list` (defaults filled in for missing keys).
 pub const KNOWN_KEYS: &[&str] = &[
     "default_host",
     "default_repo",
@@ -35,12 +35,12 @@ pub const KNOWN_KEYS: &[&str] = &[
     "prompt",
 ];
 
-/// Resolve the bb config directory.
+/// Resolve the bbk config directory.
 ///
 /// Precedence:
 /// 1. `BB_CONFIG_DIR`
-/// 2. `$XDG_CONFIG_HOME/bb` (Unix)
-/// 3. `$HOME/.config/bb` (Unix)
+/// 2. `$XDG_CONFIG_HOME/bbk` (Unix)
+/// 3. `$HOME/.config/bbk` (Unix)
 /// 4. `directories::ProjectDirs` (Windows / fallback)
 pub fn config_dir() -> Result<PathBuf> {
     if let Some(p) = std::env::var_os("BB_CONFIG_DIR") {
@@ -52,17 +52,17 @@ pub fn config_dir() -> Result<PathBuf> {
     {
         if let Some(p) = std::env::var_os("XDG_CONFIG_HOME") {
             if !p.is_empty() {
-                return Ok(PathBuf::from(p).join("bb"));
+                return Ok(PathBuf::from(p).join("bbk"));
             }
         }
         if let Some(home) = std::env::var_os("HOME") {
             if !home.is_empty() {
-                return Ok(PathBuf::from(home).join(".config").join("bb"));
+                return Ok(PathBuf::from(home).join(".config").join("bbk"));
             }
         }
     }
-    let dirs = directories::ProjectDirs::from("", "", "bb")
-        .ok_or_else(|| anyhow!("could not determine bb config dir"))?;
+    let dirs = directories::ProjectDirs::from("", "", "bbk")
+        .ok_or_else(|| anyhow!("could not determine bbk config dir"))?;
     Ok(dirs.config_dir().to_path_buf())
 }
 
@@ -139,7 +139,7 @@ impl Config {
         yaml::save_mapping(&self.path, &self.data).await
     }
 
-    /// YAML for `bb config list`. Known keys are emitted with their stored value or
+    /// YAML for `bbk config list`. Known keys are emitted with their stored value or
     /// the hardcoded default; unknown keys (read-passthrough) are stripped.
     pub fn effective_yaml(&self) -> Result<String> {
         let mut merged = Mapping::new();
@@ -302,9 +302,9 @@ mod tests {
     fn config_dir_honors_bb_config_dir() {
         // Save and restore environment to keep this hermetic relative to other tests.
         let prev = std::env::var_os("BB_CONFIG_DIR");
-        std::env::set_var("BB_CONFIG_DIR", "/tmp/some-override-path-for-bb");
+        std::env::set_var("BB_CONFIG_DIR", "/tmp/some-override-path-for-bbk");
         let dir = config_dir().unwrap();
-        assert_eq!(dir, PathBuf::from("/tmp/some-override-path-for-bb"));
+        assert_eq!(dir, PathBuf::from("/tmp/some-override-path-for-bbk"));
         match prev {
             Some(v) => std::env::set_var("BB_CONFIG_DIR", v),
             None => std::env::remove_var("BB_CONFIG_DIR"),

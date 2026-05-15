@@ -116,7 +116,7 @@ impl Context {
             .get_or_try_init(|| async {
                 let source = Arc::new(self.auth_source().await?);
                 let http = self.http_client().clone();
-                let ua = format!("bb/{} (+{})", self.build.version, BB_HOMEPAGE);
+                let ua = format!("bbk/{} (+{})", self.build.version, BB_HOMEPAGE);
                 Ok::<_, CliError>(crate::api::build_client(
                     http,
                     source,
@@ -136,7 +136,7 @@ impl Context {
 
     /// Resolve the target repo for the current command. Cached after first call.
     ///
-    /// Precedence: `--repo` / `BB_REPO` → `.git/config bb.default-repo` → `config.yml
+    /// Precedence: `--repo` / `BB_REPO` → `.git/config bbk.default-repo` → `config.yml
     /// default_repo` → `git remote origin` → `git remote upstream`.
     pub async fn base_repo(&self) -> Result<&BbRepo, CliError> {
         self.base_repo
@@ -170,7 +170,7 @@ impl Context {
 pub const BB_HOMEPAGE: &str = "https://github.com/hbackman/bitbucket-cli";
 
 fn default_http_client() -> reqwest::Client {
-    let ua = format!("bb/{} (+{})", env!("CARGO_PKG_VERSION"), BB_HOMEPAGE);
+    let ua = format!("bbk/{} (+{})", env!("CARGO_PKG_VERSION"), BB_HOMEPAGE);
     reqwest::Client::builder()
         .user_agent(ua)
         .timeout(Duration::from_secs(30))
@@ -184,8 +184,8 @@ async fn resolve_base_repo(ctx: &Context) -> Result<BbRepo, CliError> {
         return BbRepo::from_full_name(s).map_err(|e| CliError::Flag(e.to_string()));
     }
 
-    // 2. .git/config bb.default-repo (per-clone default).
-    if let Ok(stored) = crate::git::config_get("bb.default-repo").await {
+    // 2. .git/config bbk.default-repo (per-clone default).
+    if let Ok(stored) = crate::git::config_get("bbk.default-repo").await {
         if !stored.is_empty() {
             return BbRepo::from_full_name(&stored).map_err(|e| CliError::Flag(e.to_string()));
         }
@@ -211,7 +211,7 @@ async fn resolve_base_repo(ctx: &Context) -> Result<BbRepo, CliError> {
     }
 
     Err(CliError::Flag(
-        "no repository specified — use --repo or `bb repo set-default`".into(),
+        "no repository specified — use --repo or `bbk repo set-default`".into(),
     ))
 }
 

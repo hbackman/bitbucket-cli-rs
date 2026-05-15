@@ -1,6 +1,6 @@
-//! `bb repo set-default` — persist the per-clone default repo.
+//! `bbk repo set-default` — persist the per-clone default repo.
 //!
-//! Writes `bb.default-repo = workspace/slug` via `git config --local` when inside
+//! Writes `bbk.default-repo = workspace/slug` via `git config --local` when inside
 //! a git repo. Falls back to `default_repo:` in `config.yml` when not.
 
 use clap::Args;
@@ -11,7 +11,7 @@ use crate::context::Context;
 use crate::error::CliError;
 use crate::git;
 
-const KEY: &str = "bb.default-repo";
+const KEY: &str = "bbk.default-repo";
 const CFG_KEY: &str = "default_repo";
 
 #[derive(Args, Debug)]

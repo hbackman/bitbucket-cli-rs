@@ -1,4 +1,4 @@
-//! Parser for `bb api -F/--field` (typed) and `bb api -f/--raw-field` (string)
+//! Parser for `bbk api -F/--field` (typed) and `bbk api -f/--raw-field` (string)
 //! flag values.
 //!
 //! Typed fields coerce `true`/`false`/`null` and decimal numbers; everything

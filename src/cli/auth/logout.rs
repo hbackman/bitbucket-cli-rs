@@ -1,4 +1,4 @@
-//! `bb auth logout` — drop a stored credential.
+//! `bbk auth logout` — drop a stored credential.
 
 use clap::Args;
 

@@ -1,4 +1,4 @@
-//! Minimal markdown-ish body renderer for `bb pr view`.
+//! Minimal markdown-ish body renderer for `bbk pr view`.
 //!
 //! Full markdown rendering is out of scope for MVP; spec 06 calls for a swap-out
 //! helper. This emits the body indented by two spaces, bolds `#` / `##` heading

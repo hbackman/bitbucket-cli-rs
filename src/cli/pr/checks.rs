@@ -1,4 +1,4 @@
-//! `bb pr checks [N]` — list build statuses, optionally watching until terminal.
+//! `bbk pr checks [N]` — list build statuses, optionally watching until terminal.
 
 use std::time::Duration;
 

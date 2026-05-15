@@ -1,4 +1,4 @@
-//! End-to-end `bb api` smoke tests.
+//! End-to-end `bbk api` smoke tests.
 //!
 //! Each test spawns the compiled binary against a `wiremock` server, supplying
 //! `BB_TOKEN` for auth and `BB_CONFIG_DIR` pointed at a tempdir so the run
@@ -12,8 +12,8 @@ use serde_json::json;
 use wiremock::matchers::{header, method, path};
 use wiremock::{Mock, MockServer, ResponseTemplate};
 
-fn bb() -> Command {
-    Command::cargo_bin("bb").expect("bb binary built")
+fn bbk() -> Command {
+    Command::cargo_bin("bbk").expect("bbk binary built")
 }
 
 fn with_token_env<'a>(cmd: &'a mut Command, dir: &std::path::Path, token: &str) -> &'a mut Command {
@@ -34,7 +34,7 @@ async fn bb_api_get_returns_json_body() {
 
     let dir = tempfile::tempdir().unwrap();
     let url = format!("{}/2.0/user", server.uri());
-    let mut cmd = bb();
+    let mut cmd = bbk();
     with_token_env(&mut cmd, dir.path(), "the-token")
         .args(["api", &url])
         .assert()
@@ -53,7 +53,7 @@ async fn bb_api_jq_filters_output() {
 
     let dir = tempfile::tempdir().unwrap();
     let url = format!("{}/2.0/user", server.uri());
-    let mut cmd = bb();
+    let mut cmd = bbk();
     with_token_env(&mut cmd, dir.path(), "tok")
         .args(["api", &url, "--jq", ".username"])
         .assert()
@@ -73,7 +73,7 @@ async fn bb_api_field_sends_post_with_json_body() {
 
     let dir = tempfile::tempdir().unwrap();
     let url = format!("{}/2.0/thing", server.uri());
-    let mut cmd = bb();
+    let mut cmd = bbk();
     with_token_env(&mut cmd, dir.path(), "tok")
         .args(["api", &url, "-F", "a=1", "-F", "b=true"])
         .assert()
@@ -106,7 +106,7 @@ async fn bb_api_paginate_slurp_collects_all_values() {
 
     let dir = tempfile::tempdir().unwrap();
     let url = format!("{}/2.0/things", server.uri());
-    let mut cmd = bb();
+    let mut cmd = bbk();
     let assertion = with_token_env(&mut cmd, dir.path(), "tok")
         .args(["api", &url, "--paginate", "--slurp"])
         .assert()
@@ -133,7 +133,7 @@ async fn bb_api_placeholders_use_repo_override() {
 
     let dir = tempfile::tempdir().unwrap();
     let url = format!("{}/2.0/repositories/{{workspace}}/{{repo}}", server.uri());
-    let mut cmd = bb();
+    let mut cmd = bbk();
     with_token_env(&mut cmd, dir.path(), "tok")
         .args(["-R", "acme/widgets", "api", &url, "--jq", ".full_name"])
         .assert()
@@ -143,7 +143,8 @@ async fn bb_api_placeholders_use_repo_override() {
 
 #[test]
 fn bb_api_help_lists_flags() {
-    bb().args(["api", "--help"])
+    bbk()
+        .args(["api", "--help"])
         .assert()
         .success()
         .stdout(predicate::str::contains("--paginate"))
@@ -156,7 +157,7 @@ fn bb_api_help_lists_flags() {
 #[test]
 fn bb_api_rejects_slurp_without_paginate() {
     let dir = tempfile::tempdir().unwrap();
-    let mut cmd = bb();
+    let mut cmd = bbk();
     with_token_env(&mut cmd, dir.path(), "tok")
         .args(["api", "http://127.0.0.1:1/2.0/user", "--slurp"])
         .assert()

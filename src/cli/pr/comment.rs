@@ -1,4 +1,4 @@
-//! `bb pr comment [N]` — add, edit, or delete a comment on a PR.
+//! `bbk pr comment [N]` — add, edit, or delete a comment on a PR.
 
 use clap::{ArgGroup, Args as ClapArgs};
 use tokio::io::AsyncReadExt;

@@ -1,31 +1,34 @@
 use assert_cmd::Command;
 use predicates::prelude::*;
 
-fn bb() -> Command {
-    Command::cargo_bin("bb").expect("bb binary built")
+fn bbk() -> Command {
+    Command::cargo_bin("bbk").expect("bbk binary built")
 }
 
 #[test]
 fn version_flag_prints_version() {
-    bb().arg("--version")
+    bbk()
+        .arg("--version")
         .assert()
         .success()
-        .stdout(predicate::str::starts_with("bb "))
+        .stdout(predicate::str::starts_with("bbk "))
         .stdout(predicate::str::contains("commit"))
         .stdout(predicate::str::contains("built"));
 }
 
 #[test]
 fn version_subcommand_prints_version() {
-    bb().arg("version")
+    bbk()
+        .arg("version")
         .assert()
         .success()
-        .stdout(predicate::str::starts_with("bb "));
+        .stdout(predicate::str::starts_with("bbk "));
 }
 
 #[test]
 fn help_lists_core_subcommands() {
-    bb().arg("--help")
+    bbk()
+        .arg("--help")
         .assert()
         .success()
         .stdout(predicate::str::contains("auth"))
@@ -38,7 +41,8 @@ fn help_lists_core_subcommands() {
 
 #[test]
 fn pr_subcommand_lists_verbs() {
-    bb().args(["pr", "--help"])
+    bbk()
+        .args(["pr", "--help"])
         .assert()
         .success()
         .stdout(predicate::str::contains("list"))
@@ -52,7 +56,8 @@ fn pr_subcommand_lists_verbs() {
 
 #[test]
 fn pr_list_json_with_no_value_lists_fields() {
-    bb().args(["pr", "list", "--json", "--repo", "x/y"])
+    bbk()
+        .args(["pr", "list", "--json", "--repo", "x/y"])
         .assert()
         .failure()
         .code(2)
@@ -62,7 +67,8 @@ fn pr_list_json_with_no_value_lists_fields() {
 
 #[test]
 fn auth_subcommand_lists_verbs() {
-    bb().args(["auth", "--help"])
+    bbk()
+        .args(["auth", "--help"])
         .assert()
         .success()
         .stdout(predicate::str::contains("login"))
@@ -77,7 +83,7 @@ fn auth_subcommand_lists_verbs() {
 #[test]
 fn auth_status_when_not_logged_in_exits_4() {
     let dir = tempfile::TempDir::new().unwrap();
-    let mut cmd = bb();
+    let mut cmd = bbk();
     cmd.env("BB_CONFIG_DIR", dir.path())
         .env_remove("BB_TOKEN")
         .env_remove("BITBUCKET_TOKEN")
@@ -90,7 +96,8 @@ fn auth_status_when_not_logged_in_exits_4() {
 
 #[test]
 fn unknown_subcommand_is_a_flag_error() {
-    bb().arg("nonexistent")
+    bbk()
+        .arg("nonexistent")
         .assert()
         .failure()
         // clap's default error exit code.

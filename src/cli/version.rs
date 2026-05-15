@@ -1,4 +1,4 @@
-//! `bb version` — print the build info, with optional `--json`. Also runs the
+//! `bbk version` — print the build info, with optional `--json`. Also runs the
 //! 24-hour update notifier unless disabled.
 
 use clap::Args;
@@ -32,7 +32,7 @@ pub async fn run_with(args: VersionArgs, ctx: &mut Context) -> Result<(), CliErr
     } else {
         writeln!(
             ctx.io.out(),
-            "bb {} (commit {}, built {})",
+            "bbk {} (commit {}, built {})",
             ctx.build.version,
             ctx.build.commit,
             ctx.build.date,
@@ -53,7 +53,7 @@ async fn maybe_notice(ctx: &mut Context) {
         let icon = ctx.io.cs().warning_icon();
         let _ = writeln!(
             ctx.io.err(),
-            "{icon} A newer version of bb is available: {} → {}. {}",
+            "{icon} A newer version of bbk is available: {} → {}. {}",
             notice.current,
             notice.latest,
             notice.upgrade_hint,
@@ -70,7 +70,7 @@ mod tests {
         let (mut ctx, bufs) = Context::test();
         run(&mut ctx).await.unwrap();
         let out = bufs.stdout_string();
-        assert!(out.starts_with("bb "));
+        assert!(out.starts_with("bbk "));
         assert!(out.contains("commit"));
         assert!(out.contains("built"));
     }

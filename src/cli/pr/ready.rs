@@ -1,4 +1,4 @@
-//! `bb pr ready [N]` — flip a draft PR to ready-for-review.
+//! `bbk pr ready [N]` — flip a draft PR to ready-for-review.
 
 use clap::Args as ClapArgs;
 

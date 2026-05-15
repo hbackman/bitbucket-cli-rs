@@ -1,4 +1,4 @@
-//! `bb pr edit [N]` — update title/body/base/reviewers on an existing PR.
+//! `bbk pr edit [N]` — update title/body/base/reviewers on an existing PR.
 
 use clap::Args as ClapArgs;
 use tokio::io::AsyncReadExt;

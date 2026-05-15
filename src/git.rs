@@ -9,7 +9,7 @@ pub async fn remote_url(name: &str) -> Result<String> {
     Ok(out.trim().to_string())
 }
 
-/// Read an arbitrary local git config key (e.g. `bb.default-repo`).
+/// Read an arbitrary local git config key (e.g. `bbk.default-repo`).
 pub async fn config_get(key: &str) -> Result<String> {
     let out = run(&["config", "--get", key]).await?;
     Ok(out.trim().to_string())

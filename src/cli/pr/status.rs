@@ -1,4 +1,4 @@
-//! `bb pr status` — current-branch PR, your open PRs, PRs awaiting your review.
+//! `bbk pr status` — current-branch PR, your open PRs, PRs awaiting your review.
 
 use clap::Args as ClapArgs;
 use tokio::try_join;

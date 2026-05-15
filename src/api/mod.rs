@@ -6,7 +6,7 @@
 //! 1. [`Transport`] — auth header injection, 429 / 401-refresh retries, error
 //!    envelope parsing, debug logging.
 //! 2. [`Client`] — typed entry point exposing resource services.
-//! 3. [`crate::cli::api`] — the `bb api` escape hatch built on top.
+//! 3. [`crate::cli::api`] — the `bbk api` escape hatch built on top.
 
 pub mod activity;
 pub mod branch;

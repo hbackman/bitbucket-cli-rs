@@ -6,10 +6,10 @@
 
 use std::sync::Arc;
 
-use bb::api::{self, ApiError, Client, Transport};
-use bb::auth::{AuthSource, KeyringBackend, MemKeyring};
-use bb::bbrepo::BbRepo;
-use bb::config::Hosts;
+use bbk::api::{self, ApiError, Client, Transport};
+use bbk::auth::{AuthSource, KeyringBackend, MemKeyring};
+use bbk::bbrepo::BbRepo;
+use bbk::config::Hosts;
 use serde_json::json;
 use serde_yaml::{Mapping, Value};
 use tempfile::TempDir;

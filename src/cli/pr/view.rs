@@ -1,4 +1,4 @@
-//! `bb pr view [N]` — show details of a pull request.
+//! `bbk pr view [N]` — show details of a pull request.
 
 use clap::Args as ClapArgs;
 

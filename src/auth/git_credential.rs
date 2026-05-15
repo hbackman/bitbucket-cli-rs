@@ -1,14 +1,14 @@
 //! Implementation of the git-credential helper protocol — see
 //! <https://git-scm.com/docs/git-credential>.
 //!
-//! Git invokes `bb auth git-credential <op>` over stdin/stdout with
+//! Git invokes `bbk auth git-credential <op>` over stdin/stdout with
 //! `key=value` lines, terminated by a blank line.
 
 use std::collections::HashMap;
 
 use anyhow::{anyhow, Result};
 
-/// Operations git might invoke. `store` and `erase` are no-ops — bb owns its own
+/// Operations git might invoke. `store` and `erase` are no-ops — bbk owns its own
 /// credential store and ignores git's cache notifications.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CredentialOp {

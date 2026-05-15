@@ -1,4 +1,4 @@
-//! `bb auth token` — print the currently configured bearer token to stdout.
+//! `bbk auth token` — print the currently configured bearer token to stdout.
 
 use clap::Args;
 

@@ -58,10 +58,10 @@ fn cache_path() -> Result<PathBuf> {
     }
     if let Some(home) = std::env::var_os("XDG_CACHE_HOME") {
         if !home.is_empty() {
-            return Ok(PathBuf::from(home).join("bb").join("update-check.json"));
+            return Ok(PathBuf::from(home).join("bbk").join("update-check.json"));
         }
     }
-    let dirs = directories::ProjectDirs::from("", "", "bb")
+    let dirs = directories::ProjectDirs::from("", "", "bbk")
         .context("could not determine cache directory")?;
     Ok(dirs.cache_dir().join("update-check.json"))
 }
@@ -166,7 +166,7 @@ fn upgrade_hint() -> String {
             return "Run `brew upgrade hbackman/bb/bb`.".into();
         }
         if s.contains("/.cargo/bin/") || s.contains("\\.cargo\\bin\\") {
-            return "Run `cargo install bb --force`.".into();
+            return "Run `cargo install bbk --force`.".into();
         }
     }
     "See https://github.com/hbackman/bitbucket-cli/releases/latest for the new release.".into()

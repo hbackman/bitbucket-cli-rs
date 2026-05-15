@@ -1,4 +1,4 @@
-//! `bb api` — the escape hatch. Issues any HTTP request through the typed
+//! `bbk api` — the escape hatch. Issues any HTTP request through the typed
 //! transport (auth header + retries + debug logging) and prints the response.
 
 use std::sync::Arc;
@@ -420,7 +420,7 @@ async fn build_transport(ctx: &mut Context, host: &str) -> Result<Transport, Cli
     let source = Arc::new(ctx.auth_source().await?);
     let http = ctx.http_client().clone();
     let ua = format!(
-        "bb/{} (+{})",
+        "bbk/{} (+{})",
         ctx.build.version,
         crate::context::BB_HOMEPAGE
     );

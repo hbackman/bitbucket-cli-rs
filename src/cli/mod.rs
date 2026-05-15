@@ -17,15 +17,15 @@ pub mod version;
 
 #[derive(Parser, Debug)]
 #[command(
-    name = "bb",
-    bin_name = "bb",
+    name = "bbk",
+    bin_name = "bbk",
     version = concat!(
         env!("CARGO_PKG_VERSION"),
         " (commit ", env!("BB_BUILD_COMMIT"),
         ", built ",  env!("BB_BUILD_DATE"), ")"
     ),
     about = "Bitbucket Cloud command-line tool",
-    long_about = "bb is a Bitbucket Cloud CLI modeled on GitHub's gh.",
+    long_about = "bbk is a Bitbucket Cloud CLI modeled on GitHub's gh.",
     propagate_version = false,
     disable_help_subcommand = true,
 )]

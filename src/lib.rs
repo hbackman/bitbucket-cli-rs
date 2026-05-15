@@ -1,4 +1,4 @@
-//! `bb` — Bitbucket Cloud command-line tool.
+//! `bbk` — Bitbucket Cloud command-line tool.
 //!
 //! Modules are re-exported here so `tests/` integration tests and `main.rs`
 //! share a single canonical definition.

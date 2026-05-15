@@ -1,4 +1,4 @@
-//! Shared rendering helpers for `bb repo …` JSON output.
+//! Shared rendering helpers for `bbk repo …` JSON output.
 //!
 //! Every list/view subcommand exposes the same `--json` field surface, so the
 //! field set and the projection live here.
@@ -7,7 +7,7 @@ use serde_json::{json, Value};
 
 use crate::api::types::Repository;
 
-/// `--json` fields supported by `bb repo view` and `bb repo list`.
+/// `--json` fields supported by `bbk repo view` and `bbk repo list`.
 pub const JSON_FIELDS: &[&str] = &[
     "name",
     "fullName",

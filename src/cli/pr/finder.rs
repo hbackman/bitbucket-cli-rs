@@ -1,4 +1,4 @@
-//! Resolve `[N]` arguments on `bb pr` subcommands.
+//! Resolve `[N]` arguments on `bbk pr` subcommands.
 //!
 //! Lookup order:
 //! 1. Explicit numeric PR ID — fetch directly.

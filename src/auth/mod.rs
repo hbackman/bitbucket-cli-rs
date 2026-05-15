@@ -26,7 +26,7 @@ pub use oauth::{
     build_authorize_url, exchange_code, oauth_client, refresh_oauth_token, OAuthTokens,
 };
 
-/// Default scopes requested on `bb auth login`. Override with `--scopes`.
+/// Default scopes requested on `bbk auth login`. Override with `--scopes`.
 pub const DEFAULT_SCOPES: &[&str] = &[
     "account",
     "repository",
@@ -205,7 +205,7 @@ impl AuthSource {
                 }
                 if rec.refresh_token.is_empty() {
                     return Err(anyhow!(
-                        "OAuth token for {}@{host} expired and no refresh token is stored. Run `bb auth login`.",
+                        "OAuth token for {}@{host} expired and no refresh token is stored. Run `bbk auth login`.",
                         rec.user
                     ));
                 }
@@ -240,7 +240,7 @@ impl AuthSource {
         }
         if rec.refresh_token.is_empty() {
             return Err(anyhow!(
-                "no refresh token stored for {}@{host}. Run `bb auth login`.",
+                "no refresh token stored for {}@{host}. Run `bbk auth login`.",
                 rec.user
             ));
         }

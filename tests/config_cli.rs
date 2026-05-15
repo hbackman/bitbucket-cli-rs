@@ -1,12 +1,12 @@
-//! Integration tests for `bb config get|set|list`. Each test points `BB_CONFIG_DIR`
+//! Integration tests for `bbk config get|set|list`. Each test points `BB_CONFIG_DIR`
 //! at a fresh tempdir so they neither read nor write the developer's real config.
 
 use assert_cmd::Command;
 use predicates::prelude::*;
 use tempfile::TempDir;
 
-fn bb_in(dir: &TempDir) -> Command {
-    let mut cmd = Command::cargo_bin("bb").expect("bb binary built");
+fn bbk_in(dir: &TempDir) -> Command {
+    let mut cmd = Command::cargo_bin("bbk").expect("bbk binary built");
     cmd.env("BB_CONFIG_DIR", dir.path());
     // Defensive: ensure we never inherit a real $BB_REPO or $BB_HOST from CI.
     cmd.env_remove("BB_REPO");
@@ -18,12 +18,12 @@ fn bb_in(dir: &TempDir) -> Command {
 fn set_then_get_round_trip() {
     let dir = TempDir::new().unwrap();
 
-    bb_in(&dir)
+    bbk_in(&dir)
         .args(["config", "set", "editor", "code -w"])
         .assert()
         .success();
 
-    bb_in(&dir)
+    bbk_in(&dir)
         .args(["config", "get", "editor"])
         .assert()
         .success()
@@ -33,7 +33,7 @@ fn set_then_get_round_trip() {
 #[test]
 fn get_unknown_key_exits_1() {
     let dir = TempDir::new().unwrap();
-    bb_in(&dir)
+    bbk_in(&dir)
         .args(["config", "get", "bogus"])
         .assert()
         .failure()
@@ -44,7 +44,7 @@ fn get_unknown_key_exits_1() {
 #[test]
 fn set_rejects_invalid_git_protocol() {
     let dir = TempDir::new().unwrap();
-    bb_in(&dir)
+    bbk_in(&dir)
         .args(["config", "set", "git_protocol", "carrier-pigeon"])
         .assert()
         .failure()
@@ -54,7 +54,7 @@ fn set_rejects_invalid_git_protocol() {
 #[test]
 fn set_rejects_unknown_key() {
     let dir = TempDir::new().unwrap();
-    bb_in(&dir)
+    bbk_in(&dir)
         .args(["config", "set", "bogus", "value"])
         .assert()
         .failure()
@@ -64,7 +64,7 @@ fn set_rejects_unknown_key() {
 #[test]
 fn list_includes_defaults() {
     let dir = TempDir::new().unwrap();
-    bb_in(&dir)
+    bbk_in(&dir)
         .args(["config", "list"])
         .assert()
         .success()
@@ -76,11 +76,11 @@ fn list_includes_defaults() {
 #[test]
 fn list_reflects_user_overrides() {
     let dir = TempDir::new().unwrap();
-    bb_in(&dir)
+    bbk_in(&dir)
         .args(["config", "set", "git_protocol", "ssh"])
         .assert()
         .success();
-    bb_in(&dir)
+    bbk_in(&dir)
         .args(["config", "list"])
         .assert()
         .success()
@@ -90,7 +90,7 @@ fn list_reflects_user_overrides() {
 #[test]
 fn host_scoped_set_writes_hosts_yml() {
     let dir = TempDir::new().unwrap();
-    bb_in(&dir)
+    bbk_in(&dir)
         .args([
             "config",
             "set",
@@ -107,7 +107,7 @@ fn host_scoped_set_writes_hosts_yml() {
     assert!(raw.contains("active_user"), "got: {raw}");
     assert!(raw.contains("hbackman"), "got: {raw}");
 
-    bb_in(&dir)
+    bbk_in(&dir)
         .args(["config", "get", "--host", "bitbucket.org", "active_user"])
         .assert()
         .success()
@@ -119,7 +119,7 @@ fn pr_list_with_repo_override_targets_that_repo() {
     // `--repo` should propagate through dispatch and reach the API layer, which
     // fails with an auth error in an unconfigured config dir — exit code 4, not 2.
     let dir = TempDir::new().unwrap();
-    bb_in(&dir)
+    bbk_in(&dir)
         .args(["-R", "acme/widgets", "pr", "list"])
         .assert()
         .failure()
@@ -130,7 +130,7 @@ fn pr_list_with_repo_override_targets_that_repo() {
 #[test]
 fn bb_repo_env_var_routes_through_dispatch() {
     let dir = TempDir::new().unwrap();
-    let mut cmd = Command::cargo_bin("bb").expect("bb binary built");
+    let mut cmd = Command::cargo_bin("bbk").expect("bbk binary built");
     cmd.env("BB_CONFIG_DIR", dir.path())
         .env("BB_REPO", "acme/widgets")
         .env_remove("BB_TOKEN")

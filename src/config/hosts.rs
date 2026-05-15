@@ -70,7 +70,7 @@ impl Hosts {
         yaml::save_mapping(&self.path, &self.data).await
     }
 
-    /// Emit the YAML for one host block (used by `bb config list --host`).
+    /// Emit the YAML for one host block (used by `bbk config list --host`).
     pub fn host_yaml(&self, host: &str) -> Result<String> {
         let block = Value::Mapping(self.host_block(host));
         Ok(serde_yaml::to_string(&block)?)

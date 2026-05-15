@@ -1,4 +1,4 @@
-//! `bb repo view` — print repo metadata + README.
+//! `bbk repo view` — print repo metadata + README.
 
 use clap::Args;
 

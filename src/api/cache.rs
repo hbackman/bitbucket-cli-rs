@@ -1,6 +1,6 @@
-//! `bb api --cache <duration>` support.
+//! `bbk api --cache <duration>` support.
 //!
-//! Stores successful GET responses in `${XDG_CACHE_HOME}/bb/api/<sha256>`. One
+//! Stores successful GET responses in `${XDG_CACHE_HOME}/bbk/api/<sha256>`. One
 //! file per entry, no background eviction — stale entries are deleted lazily on
 //! read.
 
@@ -42,17 +42,17 @@ pub fn cache_dir() -> Result<PathBuf> {
     {
         if let Some(p) = std::env::var_os("XDG_CACHE_HOME") {
             if !p.is_empty() {
-                return Ok(PathBuf::from(p).join("bb").join("api"));
+                return Ok(PathBuf::from(p).join("bbk").join("api"));
             }
         }
         if let Some(home) = std::env::var_os("HOME") {
             if !home.is_empty() {
-                return Ok(PathBuf::from(home).join(".cache").join("bb").join("api"));
+                return Ok(PathBuf::from(home).join(".cache").join("bbk").join("api"));
             }
         }
     }
-    let dirs = directories::ProjectDirs::from("", "", "bb")
-        .ok_or_else(|| anyhow!("could not determine bb cache dir"))?;
+    let dirs = directories::ProjectDirs::from("", "", "bbk")
+        .ok_or_else(|| anyhow!("could not determine bbk cache dir"))?;
     Ok(dirs.cache_dir().join("api"))
 }
 

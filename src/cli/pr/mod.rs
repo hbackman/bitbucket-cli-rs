@@ -1,4 +1,4 @@
-//! `bb pr ...` — pull request commands. Spec: `docs/specs/06-commands-pr.md`.
+//! `bbk pr ...` — pull request commands. Spec: `docs/specs/06-commands-pr.md`.
 
 use clap::{Args, Subcommand};
 

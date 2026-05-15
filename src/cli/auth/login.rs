@@ -1,4 +1,4 @@
-//! `bb auth login`. Runs the OAuth browser flow (default) or accepts a paste-in API
+//! `bbk auth login`. Runs the OAuth browser flow (default) or accepts a paste-in API
 //! token (`--with-token`).
 
 use std::time::Duration;
@@ -31,7 +31,7 @@ pub struct LoginArgs {
     #[arg(long = "with-token")]
     pub with_token: bool,
 
-    /// Comma-separated OAuth scopes. Defaults to the bb-recommended set.
+    /// Comma-separated OAuth scopes. Defaults to the bbk-recommended set.
     #[arg(long, value_name = "SCOPES")]
     pub scopes: Option<String>,
 
@@ -107,7 +107,7 @@ pub async fn run(args: LoginArgs, ctx: &mut Context) -> Result<(), CliError> {
     if !args.no_setup_git {
         writeln!(
             ctx.io.err(),
-            "  Run `bb auth setup-git` to use bb as your git credential helper for {}.",
+            "  Run `bbk auth setup-git` to use bbk as your git credential helper for {}.",
             rec.host
         )
         .map_err(|e| CliError::Other(e.into()))?;
@@ -194,7 +194,7 @@ async fn login_with_token(
     let token = buf.trim().to_string();
     if token.is_empty() {
         return Err(CliError::Flag(
-            "no token on stdin. Pipe one in: `bb auth login --with-token < token.txt`.".into(),
+            "no token on stdin. Pipe one in: `bbk auth login --with-token < token.txt`.".into(),
         ));
     }
 

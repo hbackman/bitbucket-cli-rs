@@ -1,4 +1,4 @@
-//! `bb pr review [N]` — approve, request changes, or comment on a PR.
+//! `bbk pr review [N]` — approve, request changes, or comment on a PR.
 
 use clap::{ArgGroup, Args as ClapArgs};
 use tokio::io::AsyncReadExt;

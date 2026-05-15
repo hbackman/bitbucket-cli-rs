@@ -1,4 +1,4 @@
-//! `bb pr merge [N]` — merge a pull request.
+//! `bbk pr merge [N]` — merge a pull request.
 
 use clap::{ArgGroup, Args as ClapArgs};
 

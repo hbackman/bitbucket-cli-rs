@@ -1,4 +1,4 @@
-//! `bb auth setup-git` — register `bb` as a git credential helper for a host.
+//! `bbk auth setup-git` — register `bbk` as a git credential helper for a host.
 
 use clap::Args;
 
@@ -20,17 +20,17 @@ pub async fn run(args: SetupGitArgs, ctx: &mut Context) -> Result<(), CliError> 
     let host = args.hostname.as_deref().unwrap_or(DEFAULT_HOST);
     let url = format!("https://{host}");
     let exe = std::env::current_exe()
-        .map_err(|e| CliError::Other(anyhow::anyhow!("locating bb executable: {e}")))?;
+        .map_err(|e| CliError::Other(anyhow::anyhow!("locating bbk executable: {e}")))?;
     let helper_cmd = format!("!{} auth git-credential", exe.display());
 
     let key_helper = format!("credential.{url}.helper");
 
     if !args.force {
         if let Ok(existing) = git::config_get_global(&key_helper).await {
-            if !existing.is_empty() && existing.contains("bb auth git-credential") {
+            if !existing.is_empty() && existing.contains("bbk auth git-credential") {
                 writeln!(
                     ctx.io.err(),
-                    "✓ Git already configured to use bb for {host}"
+                    "✓ Git already configured to use bbk for {host}"
                 )
                 .map_err(|e| CliError::Other(e.into()))?;
                 return Ok(());
@@ -51,7 +51,7 @@ pub async fn run(args: SetupGitArgs, ctx: &mut Context) -> Result<(), CliError> 
 
     writeln!(
         ctx.io.err(),
-        "✓ Git operations on {host} configured to use bb as the credential helper"
+        "✓ Git operations on {host} configured to use bbk as the credential helper"
     )
     .map_err(|e| CliError::Other(e.into()))?;
     Ok(())

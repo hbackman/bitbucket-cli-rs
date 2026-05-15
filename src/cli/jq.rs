@@ -1,4 +1,4 @@
-//! Shared jq wrapper. Used by `bb api --jq` today and the per-command `--json
+//! Shared jq wrapper. Used by `bbk api --jq` today and the per-command `--json
 //! --jq` pattern (see [`crate::cli::json_flags`]). Powered by `jaq`, the pure-Rust
 //! jq.
 //!

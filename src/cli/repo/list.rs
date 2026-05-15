@@ -1,4 +1,4 @@
-//! `bb repo list` — list repos in a workspace or accessible to the current user.
+//! `bbk repo list` — list repos in a workspace or accessible to the current user.
 
 use clap::Args;
 use serde_json::Value;

@@ -7,7 +7,7 @@ mod get;
 mod list;
 mod set;
 
-/// `bb config ...` — read and modify configuration.
+/// `bbk config ...` — read and modify configuration.
 #[derive(Args, Debug)]
 pub struct ConfigArgs {
     #[command(subcommand)]

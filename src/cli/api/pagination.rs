@@ -1,4 +1,4 @@
-//! `--paginate` output handling for `bb api`.
+//! `--paginate` output handling for `bbk api`.
 //!
 //! Without `--slurp`: print each page's JSON document, one per line. With
 //! `--slurp`: concatenate the `values` arrays from every page into a single

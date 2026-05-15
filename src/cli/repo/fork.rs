@@ -1,4 +1,4 @@
-//! `bb repo fork` — fork a repository on Bitbucket Cloud.
+//! `bbk repo fork` — fork a repository on Bitbucket Cloud.
 
 use std::time::Duration;
 

@@ -1,4 +1,4 @@
-//! `bb repo clone WS/REPO [DIR] [-- git-args]`.
+//! `bbk repo clone WS/REPO [DIR] [-- git-args]`.
 
 use clap::Args;
 

@@ -1,4 +1,4 @@
-//! `bb pr reopen [N]` — Bitbucket has no reopen endpoint; surface a clear error.
+//! `bbk pr reopen [N]` — Bitbucket has no reopen endpoint; surface a clear error.
 
 use clap::Args as ClapArgs;
 

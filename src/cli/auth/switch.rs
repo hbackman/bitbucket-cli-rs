@@ -1,4 +1,4 @@
-//! `bb auth switch` — change the active account on a host.
+//! `bbk auth switch` — change the active account on a host.
 
 use clap::Args;
 
@@ -33,7 +33,7 @@ pub async fn run(args: SwitchArgs, ctx: &mut Context) -> Result<(), CliError> {
         match candidates.as_slice() {
             [] => {
                 return Err(CliError::Auth(format!(
-                    "no other accounts to switch to on {host}. Run `bb auth login` to add one."
+                    "no other accounts to switch to on {host}. Run `bbk auth login` to add one."
                 )))
             }
             [only] => only.clone(),

@@ -277,7 +277,7 @@ pub struct Activity {
 
 /// Body for `POST /pullrequests`. Optional fields are omitted from the JSON via
 /// `skip_serializing_if`. `Deserialize` is also derived so failed-create payloads
-/// can round-trip through the `bb pr create --recover` file.
+/// can round-trip through the `bbk pr create --recover` file.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct CreatePr {
     pub title: String,

@@ -37,7 +37,7 @@ pub async fn fetch_user_at(
         .with_context(|| format!("GET {url}"))?;
     let status = resp.status();
     if status == reqwest::StatusCode::UNAUTHORIZED {
-        bail!("Bitbucket rejected the token (401). Run `bb auth login`.");
+        bail!("Bitbucket rejected the token (401). Run `bbk auth login`.");
     }
     if !status.is_success() {
         let body = resp.text().await.unwrap_or_default();

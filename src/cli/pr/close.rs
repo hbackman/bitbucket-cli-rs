@@ -1,4 +1,4 @@
-//! `bb pr close [N]` — decline a pull request.
+//! `bbk pr close [N]` — decline a pull request.
 
 use clap::Args as ClapArgs;
 

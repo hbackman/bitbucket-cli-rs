@@ -1,11 +1,11 @@
-//! Shared rendering helpers for `bb pr …`: JSON projection, state colors, URLs.
+//! Shared rendering helpers for `bbk pr …`: JSON projection, state colors, URLs.
 
 use serde_json::{json, Value};
 
 use crate::api::types::{Actor, PullRequest};
 use crate::iostreams::ColorScheme;
 
-/// `--json` fields supported by `bb pr list` / `bb pr view`.
+/// `--json` fields supported by `bbk pr list` / `bbk pr view`.
 pub const JSON_FIELDS: &[&str] = &[
     "id",
     "title",

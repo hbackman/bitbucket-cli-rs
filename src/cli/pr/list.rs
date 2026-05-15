@@ -1,4 +1,4 @@
-//! `bb pr list` — list pull requests in the target repo.
+//! `bbk pr list` — list pull requests in the target repo.
 
 use clap::Args as ClapArgs;
 use futures::future::try_join_all;

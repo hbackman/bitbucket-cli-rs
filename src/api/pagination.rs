@@ -120,7 +120,7 @@ mod tests {
     async fn transport_for(_server: &MockServer) -> (Arc<Transport>, tempfile::TempDir) {
         let (auth, dir) = super::super::transport::tests::auth_with_seeded_token("tok").await;
         let http = reqwest::Client::new();
-        let t = Arc::new(Transport::new(http, auth, "bitbucket.org", "bb-test/0.0"));
+        let t = Arc::new(Transport::new(http, auth, "bitbucket.org", "bbk-test/0.0"));
         (t, dir)
     }
 

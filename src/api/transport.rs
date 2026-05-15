@@ -113,13 +113,13 @@ impl Transport {
                     continue;
                 }
                 return Err(ApiError::Auth {
-                    hint: "the Bitbucket API rejected the current token. Run `bb auth login`."
+                    hint: "the Bitbucket API rejected the current token. Run `bbk auth login`."
                         .into(),
                 });
             }
             if status == StatusCode::UNAUTHORIZED {
                 return Err(ApiError::Auth {
-                    hint: "the Bitbucket API rejected the refreshed token. Run `bb auth login`."
+                    hint: "the Bitbucket API rejected the refreshed token. Run `bbk auth login`."
                         .into(),
                 });
             }
@@ -305,7 +305,12 @@ pub(crate) mod tests {
     async fn injects_bearer_token_from_env() {
         let _g = scoped_env("BB_TOKEN", Some("the-token"));
         let auth = test_auth();
-        let t = Transport::new(reqwest::Client::new(), auth, "bitbucket.org", "bb-test/0.0");
+        let t = Transport::new(
+            reqwest::Client::new(),
+            auth,
+            "bitbucket.org",
+            "bbk-test/0.0",
+        );
         let req = reqwest::Client::new()
             .get("https://example.invalid/")
             .build()
@@ -314,7 +319,7 @@ pub(crate) mod tests {
         let auth_header = prepared.headers().get(AUTHORIZATION).unwrap();
         assert_eq!(auth_header.to_str().unwrap(), "Bearer the-token");
         let ua = prepared.headers().get(USER_AGENT).unwrap();
-        assert_eq!(ua.to_str().unwrap(), "bb-test/0.0");
+        assert_eq!(ua.to_str().unwrap(), "bbk-test/0.0");
     }
 
     /// RAII guard that scopes an env-var change for the duration of a test.

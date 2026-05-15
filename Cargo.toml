@@ -1,5 +1,5 @@
 [package]
-name = "bb"
+name = "bbk"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.75"
@@ -8,11 +8,11 @@ description = "Bitbucket Cloud command-line tool"
 repository = "https://github.com/hbackman/bitbucket-cli"
 
 [[bin]]
-name = "bb"
+name = "bbk"
 path = "src/main.rs"
 
 [lib]
-name = "bb"
+name = "bbk"
 path = "src/lib.rs"
 
 [dependencies]
@@ -91,7 +91,7 @@ installers = ["shell", "powershell", "homebrew"]
 # Target platforms to build apps for (Rust target-triple syntax)
 targets = ["aarch64-apple-darwin", "aarch64-unknown-linux-gnu", "aarch64-unknown-linux-musl", "x86_64-apple-darwin", "x86_64-unknown-linux-gnu", "x86_64-unknown-linux-musl", "x86_64-pc-windows-msvc"]
 # A GitHub repo to push Homebrew formulas to
-tap = "hbackman/homebrew-bb"
+tap = "hbackman/homebrew-bbk"
 # Publish jobs to run in CI
 publish-jobs = ["homebrew"]
 # Which actions to run on pull requests

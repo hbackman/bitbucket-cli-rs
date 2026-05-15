@@ -60,15 +60,15 @@ pub fn report(err: CliError) -> ExitCode {
     let code = err.exit_code();
     match err {
         CliError::Silent => {}
-        CliError::Flag(msg) => eprintln!("bb: {msg}"),
-        CliError::NotFound(msg) => eprintln!("bb: not found: {msg}"),
-        CliError::Auth(msg) => eprintln!("bb: authentication: {msg}"),
+        CliError::Flag(msg) => eprintln!("bbk: {msg}"),
+        CliError::NotFound(msg) => eprintln!("bbk: not found: {msg}"),
+        CliError::Auth(msg) => eprintln!("bbk: authentication: {msg}"),
         CliError::RateLimit { retry_after_secs } => {
-            eprintln!("bb: rate limited; retry after {retry_after_secs}s")
+            eprintln!("bbk: rate limited; retry after {retry_after_secs}s")
         }
-        CliError::Cancel => eprintln!("bb: cancelled"),
-        CliError::NotImplemented => eprintln!("bb: not yet implemented"),
-        CliError::Other(e) => eprintln!("bb: {e:#}"),
+        CliError::Cancel => eprintln!("bbk: cancelled"),
+        CliError::NotImplemented => eprintln!("bbk: not yet implemented"),
+        CliError::Other(e) => eprintln!("bbk: {e:#}"),
     }
     ExitCode::from(code)
 }

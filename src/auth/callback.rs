@@ -11,7 +11,7 @@ use anyhow::{anyhow, bail, Result};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpListener;
 
-pub const SUCCESS_HTML: &str = "<!doctype html><html><head><title>bb — authenticated</title>\
+pub const SUCCESS_HTML: &str = "<!doctype html><html><head><title>bbk — authenticated</title>\
     <style>body{font-family:system-ui,sans-serif;margin:4rem auto;max-width:32rem;text-align:center}</style>\
     </head><body><h1>You're all set.</h1>\
     <p>Authentication complete — you can close this window and return to your terminal.</p></body></html>";
@@ -65,7 +65,7 @@ pub async fn await_callback(
     };
     tokio::time::timeout(timeout, fut)
         .await
-        .map_err(|_| anyhow!("authentication timed out. Re-run `bb auth login`."))?
+        .map_err(|_| anyhow!("authentication timed out. Re-run `bbk auth login`."))?
 }
 
 enum Outcome {

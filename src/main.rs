@@ -1,6 +1,6 @@
 use std::process::ExitCode;
 
-use bb::{cli, context::Context, error};
+use bbk::{cli, context::Context, error};
 
 #[tokio::main]
 async fn main() -> ExitCode {

@@ -1,4 +1,4 @@
-//! `bb pr diff [N]` — print the diff for a pull request.
+//! `bbk pr diff [N]` — print the diff for a pull request.
 //!
 //! Streams the response body straight through `IoStreams::out()` so megabyte-sized
 //! diffs don't get buffered. When stdout is a TTY we apply basic per-line ANSI

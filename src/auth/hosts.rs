@@ -117,12 +117,12 @@ pub async fn read_user(
         Some(u) => u.to_string(),
         None => hosts_r
             .get(host, ACTIVE_USER)
-            .ok_or_else(|| anyhow!("not logged in to {host}. Run `bb auth login`."))?,
+            .ok_or_else(|| anyhow!("not logged in to {host}. Run `bbk auth login`."))?,
     };
 
     let block = hosts_r.user_block(host, &user);
     if block.is_empty() {
-        bail!("no credentials stored for {user}@{host}. Run `bb auth login`.");
+        bail!("no credentials stored for {user}@{host}. Run `bbk auth login`.");
     }
 
     let kind_str = scalar(&block, FIELD_TYPE).unwrap_or_else(|| "oauth".into());
@@ -153,7 +153,7 @@ pub async fn read_user(
     };
 
     if access_token.is_empty() && matches!(kind, AuthKind::OAuth | AuthKind::ApiToken) {
-        bail!("no access token stored for {user}@{host}. Run `bb auth login`.");
+        bail!("no access token stored for {user}@{host}. Run `bbk auth login`.");
     }
 
     Ok(AuthRecord {

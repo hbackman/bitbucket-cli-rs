@@ -1,4 +1,4 @@
-//! `bb completion <shell>` — emit shell completion scripts via `clap_complete`.
+//! `bbk completion <shell>` — emit shell completion scripts via `clap_complete`.
 
 use clap::{Args, CommandFactory, ValueEnum};
 use clap_complete::{generate, Shell};
@@ -38,7 +38,7 @@ pub async fn run(args: CompletionArgs, ctx: &mut Context) -> Result<(), CliError
     let mut cmd = super::Cli::command();
     let shell: Shell = args.shell.into();
     let mut out: Vec<u8> = Vec::new();
-    generate(shell, &mut cmd, "bb", &mut out);
+    generate(shell, &mut cmd, "bbk", &mut out);
     ctx.io
         .out()
         .write_all(&out)
@@ -62,6 +62,6 @@ mod tests {
         .unwrap();
         let s = bufs.stdout_string();
         assert!(!s.is_empty());
-        assert!(s.contains("bb"));
+        assert!(s.contains("bbk"));
     }
 }

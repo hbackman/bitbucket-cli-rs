@@ -1,4 +1,4 @@
-//! `bb auth ...` — login, logout, status, token, refresh, switch, setup-git,
+//! `bbk auth ...` — login, logout, status, token, refresh, switch, setup-git,
 //! git-credential. Spec: `docs/specs/02-authentication.md`.
 
 use clap::{Args, Subcommand};
@@ -22,17 +22,17 @@ pub struct AuthArgs {
 
 #[derive(Subcommand, Debug)]
 enum AuthCommand {
-    /// Authenticate `bb` with a Bitbucket host.
+    /// Authenticate `bbk` with a Bitbucket host.
     Login(login::LoginArgs),
     /// Log out of a Bitbucket host.
     Logout(logout::LogoutArgs),
     /// View authentication status.
     Status(status::StatusArgs),
-    /// Print the auth token `bb` is configured to use.
+    /// Print the auth token `bbk` is configured to use.
     Token(token::TokenArgs),
     /// Switch the active account on a Bitbucket host.
     Switch(switch::SwitchArgs),
-    /// Configure `git` to use `bb` as a credential helper.
+    /// Configure `git` to use `bbk` as a credential helper.
     #[command(name = "setup-git")]
     SetupGit(setup_git::SetupGitArgs),
     /// Git credential helper backend. Invoked by `git`.

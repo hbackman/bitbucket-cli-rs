@@ -1,4 +1,4 @@
-//! `bb pr create` — create a new pull request.
+//! `bbk pr create` — create a new pull request.
 //!
 //! Steps:
 //! 1. Resolve head (source) + base (destination) branches.
@@ -200,7 +200,7 @@ pub async fn run(args: Args, ctx: &mut Context) -> Result<(), CliError> {
             print_warning(
                 &mut ctx.io,
                 &format!(
-                    "Failed to create pull request. Re-run with `bb pr create --recover {}` to retry.",
+                    "Failed to create pull request. Re-run with `bbk pr create --recover {}` to retry.",
                     path.display()
                 ),
             )
@@ -439,7 +439,7 @@ fn pr_fallback_url(repo: &BbRepo, pr: &PullRequest) -> String {
 }
 
 fn write_recover_file(repo: &BbRepo, payload: &CreatePr) -> Result<PathBuf, CliError> {
-    let dirs = ProjectDirs::from("", "", "bb")
+    let dirs = ProjectDirs::from("", "", "bbk")
         .ok_or_else(|| CliError::Other(anyhow::anyhow!("could not resolve a cache directory")))?;
     let dir = dirs.cache_dir().to_path_buf();
     fs::create_dir_all(&dir).map_err(|e| CliError::Other(e.into()))?;

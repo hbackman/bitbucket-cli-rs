@@ -1,4 +1,4 @@
-//! `bb pr checkout N` — check out a pull request's source branch locally.
+//! `bbk pr checkout N` — check out a pull request's source branch locally.
 
 use clap::Args as ClapArgs;
 
