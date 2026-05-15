@@ -167,7 +167,7 @@ impl Context {
     }
 }
 
-pub const BB_HOMEPAGE: &str = "https://github.com/hbackman/bitbucket-cli";
+pub const BB_HOMEPAGE: &str = "https://github.com/hbackman/bitbucket-cli-rs";
 
 fn default_http_client() -> reqwest::Client {
     let ua = format!("bbk/{} (+{})", env!("CARGO_PKG_VERSION"), BB_HOMEPAGE);

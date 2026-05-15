@@ -1,5 +1,21 @@
 /target
+
+# Rust
 **/*.rs.bk
-.DS_Store
+
+# Local secrets and sandbox state
 .env
 .env.local
+
+# Backup files (e.g. from sed -i)
+*.bak
+
+# Editors / IDEs
+.idea/
+.vscode/
+*.swp
+*~
+
+# OS
+.DS_Store
+Thumbs.db

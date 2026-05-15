@@ -13,7 +13,7 @@ use anyhow::{Context as _, Result};
 use semver::Version;
 use serde::{Deserialize, Serialize};
 
-const RELEASE_API: &str = "https://api.github.com/repos/hbackman/bitbucket-cli/releases/latest";
+const RELEASE_API: &str = "https://api.github.com/repos/hbackman/bitbucket-cli-rs/releases/latest";
 const CACHE_TTL: Duration = Duration::from_secs(24 * 60 * 60);
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -169,7 +169,7 @@ fn upgrade_hint() -> String {
             return "Run `cargo install bbk --force`.".into();
         }
     }
-    "See https://github.com/hbackman/bitbucket-cli/releases/latest for the new release.".into()
+    "See https://github.com/hbackman/bitbucket-cli-rs/releases/latest for the new release.".into()
 }
 
 #[cfg(test)]

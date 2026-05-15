@@ -28,7 +28,7 @@ brew install hbackman/bbk/bbk
 ### Manually
 
 Download the latest release for your platform from
-<https://github.com/hbackman/bitbucket-cli/releases/latest> and extract the
+<https://github.com/hbackman/bitbucket-cli-rs/releases/latest> and extract the
 `bbk` binary into a directory on your `$PATH`.
 
 On macOS, if Gatekeeper blocks the binary after a manual download, clear the
@@ -41,7 +41,7 @@ xattr -d com.apple.quarantine /usr/local/bin/bbk
 ### From source
 
 ```sh
-cargo install --git https://github.com/hbackman/bitbucket-cli bbk
+cargo install --git https://github.com/hbackman/bitbucket-cli-rs bbk
 ```
 
 ## Quick start

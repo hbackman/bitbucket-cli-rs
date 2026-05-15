@@ -5,7 +5,7 @@ edition = "2021"
 rust-version = "1.75"
 license = "MIT"
 description = "Bitbucket Cloud command-line tool"
-repository = "https://github.com/hbackman/bitbucket-cli"
+repository = "https://github.com/hbackman/bitbucket-cli-rs"
 
 [[bin]]
 name = "bbk"
