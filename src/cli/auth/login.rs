@@ -43,9 +43,12 @@ pub struct LoginArgs {
     #[arg(long, value_name = "SECRET")]
     pub client_secret: Option<String>,
 
-    /// Skip the OS keyring and write tokens to hosts.yml (chmod 0600).
+    /// Store the token in the OS keyring instead of plaintext in hosts.yml.
+    /// Default is plaintext in hosts.yml (chmod 0600) — matches gh's UX and
+    /// avoids macOS Keychain prompts on every binary rebuild for unsigned
+    /// builds.
     #[arg(long)]
-    pub insecure_storage: bool,
+    pub keyring: bool,
 
     /// Default git protocol stored alongside the credential (https or ssh).
     #[arg(long, value_name = "PROTO", default_value = "https")]
@@ -78,7 +81,7 @@ pub async fn run(args: LoginArgs, ctx: &mut Context) -> Result<(), CliError> {
         login_with_browser(ctx, &source, &hostname, &args).await?
     };
 
-    let insecure = args.insecure_storage;
+    let insecure = !args.keyring;
     source
         .store(&rec, insecure)
         .await

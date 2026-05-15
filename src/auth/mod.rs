@@ -87,7 +87,7 @@ pub fn resolve_client_secret(flag: Option<&str>) -> String {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum AuthKind {
-    /// OAuth: refreshable. Token lives in keyring or, with --insecure-storage, hosts.yml.
+    /// OAuth: refreshable. Token lives in hosts.yml by default, or in the OS keyring with `--keyring`.
     OAuth,
     /// User-provided API token. No refresh.
     ApiToken,
@@ -215,7 +215,11 @@ impl AuthSource {
                 )?;
                 let fresh = refresh_oauth_token(&client, &rec.refresh_token).await?;
                 rec.apply_refresh(fresh);
-                self.store(&rec, /* insecure */ false).await?;
+                // Preserve the storage location chosen at login time: if the
+                // token is in the keyring today, keep it there; if it's in
+                // hosts.yml (plaintext, the default), keep it there.
+                let in_keyring = self.keyring.get_password(&rec.host, &rec.user).is_ok();
+                self.store(&rec, /* insecure */ !in_keyring).await?;
                 Ok(rec.access_token.clone())
             }
         }

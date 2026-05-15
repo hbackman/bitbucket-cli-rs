@@ -1,8 +1,10 @@
 //! Persistent storage layer for auth records — splits each [`AuthRecord`] between
 //! the OS keyring (tokens) and `hosts.yml` (metadata).
 //!
-//! When the keyring is unavailable or `--insecure-storage` is set, the tokens go
-//! into hosts.yml too. We mirror gh's behavior here.
+//! Default is plaintext in hosts.yml (chmod 0600) — matches gh's UX. Pass
+//! `--keyring` at login time to put the token blob in the OS keyring with
+//! hosts.yml keeping only metadata. The keyring path is also taken
+//! transparently if the file write fails.
 
 use std::sync::Arc;
 
@@ -46,7 +48,7 @@ pub async fn write_user(
         match keyring.set_password(&rec.host, &rec.user, &json) {
             Ok(_) => {}
             Err(e) => bail!(
-                "writing token to keyring failed: {e}. Re-run with --insecure-storage to write to hosts.yml instead."
+                "writing token to keyring failed: {e}. Re-run `bbk auth login` without --keyring to write to hosts.yml instead."
             ),
         }
     }

@@ -61,7 +61,8 @@ async fn print_host(
     let storage = if env_token().is_some() {
         "from environment"
     } else {
-        // If the user block has a plaintext oauth_token field, --insecure-storage was used.
+        // Plaintext is the default; presence of an `oauth_token` field here means the
+        // token is in hosts.yml. Absence means `--keyring` was used at login.
         let h = source.hosts.read().await;
         let block = h.user_block(host, &user);
         if block.contains_key("oauth_token") {
