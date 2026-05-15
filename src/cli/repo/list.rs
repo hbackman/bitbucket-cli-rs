@@ -10,6 +10,7 @@ use crate::cli::jq;
 use crate::cli::json_flags::{JsonFlags, JsonMode};
 use crate::context::Context;
 use crate::error::CliError;
+use crate::iostreams::spinner::Spinner;
 use crate::iostreams::{Column, TablePrinter};
 use crate::text::{rel_time, truncate};
 
@@ -53,12 +54,19 @@ pub async fn run(args: ListArgs, ctx: &mut Context) -> Result<(), CliError> {
         _ => None,
     };
 
+    let stderr_tty = ctx.io.is_stderr_tty();
     let repos = if let Some(ws) = workspace {
+        let spin = Spinner::start(format!("Listing repos in {ws}…"), stderr_tty);
         let opts = build_list_opts(&args);
         let pages = client.repositories().list(&ws, opts);
-        pages.collect(args.limit as usize).await?
+        let result = pages.collect(args.limit as usize).await;
+        spin.stop();
+        result?
     } else {
-        list_accessible_to_user(&client, &args).await?
+        let spin = Spinner::start("Listing repos across your workspaces…", stderr_tty);
+        let result = list_accessible_to_user(&client, &args).await;
+        spin.stop();
+        result?
     };
 
     let repos = apply_local_filters(repos, &args);

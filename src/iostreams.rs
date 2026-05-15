@@ -3,6 +3,7 @@ use std::sync::{Arc, Mutex};
 
 use owo_colors::OwoColorize;
 
+pub mod spinner;
 pub mod table;
 
 pub use table::{Column, TablePrinter};
