@@ -87,9 +87,7 @@ pub async fn run(args: ApiArgs, ctx: &mut Context) -> Result<(), CliError> {
         ));
     }
     if args.slurp && !args.paginate {
-        return Err(CliError::Flag(
-            "--slurp requires --paginate".into(),
-        ));
+        return Err(CliError::Flag("--slurp requires --paginate".into()));
     }
 
     let host = args
@@ -149,17 +147,13 @@ async fn cached_request(
     let user = current_user(ctx).await;
     let key = cache::key("GET", url, accept, user.as_deref());
 
-    if let Some(entry) = cache::read(&key, ttl)
-        .await
-        .map_err(CliError::Other)?
-    {
+    if let Some(entry) = cache::read(&key, ttl).await.map_err(CliError::Other)? {
         let status = reqwest::StatusCode::from_u16(entry.status).unwrap_or(reqwest::StatusCode::OK);
         let mut hdr = HeaderMap::new();
         for (k, v) in &entry.headers {
-            if let (Ok(name), Ok(value)) = (
-                HeaderName::try_from(k.as_str()),
-                HeaderValue::from_str(v),
-            ) {
+            if let (Ok(name), Ok(value)) =
+                (HeaderName::try_from(k.as_str()), HeaderValue::from_str(v))
+            {
                 hdr.insert(name, value);
             }
         }
@@ -210,8 +204,7 @@ async fn paginate_path(
     .await?;
     let stdout = ctx.io.out();
     for page in &bufs {
-        let rendered = serde_json::to_string(page)
-            .map_err(|e| CliError::Other(e.into()))?;
+        let rendered = serde_json::to_string(page).map_err(|e| CliError::Other(e.into()))?;
         writeln!(stdout, "{rendered}").map_err(|e| CliError::Other(e.into()))?;
     }
     Ok(())
@@ -228,13 +221,8 @@ async fn emit_response(
         let out = ctx.io.out();
         writeln!(out, "HTTP/1.1 {}", status).map_err(|e| CliError::Other(e.into()))?;
         for (k, v) in headers.iter() {
-            writeln!(
-                out,
-                "{}: {}",
-                k,
-                v.to_str().unwrap_or("<binary>")
-            )
-            .map_err(|e| CliError::Other(e.into()))?;
+            writeln!(out, "{}: {}", k, v.to_str().unwrap_or("<binary>"))
+                .map_err(|e| CliError::Other(e.into()))?;
         }
         writeln!(out).map_err(|e| CliError::Other(e.into()))?;
     }
@@ -242,15 +230,15 @@ async fn emit_response(
         return Ok(());
     }
     if let Some(expr) = args.jq.as_deref() {
-        let value: Value = serde_json::from_slice(body).map_err(|e| {
-            CliError::Other(anyhow!("response was not JSON, cannot --jq: {e}"))
-        })?;
+        let value: Value = serde_json::from_slice(body)
+            .map_err(|e| CliError::Other(anyhow!("response was not JSON, cannot --jq: {e}")))?;
         return emit_jq(ctx, expr, value);
     }
     let out = ctx.io.out();
     out.write_all(body).map_err(|e| CliError::Other(e.into()))?;
     if !body.ends_with(b"\n") {
-        out.write_all(b"\n").map_err(|e| CliError::Other(e.into()))?;
+        out.write_all(b"\n")
+            .map_err(|e| CliError::Other(e.into()))?;
     }
     Ok(())
 }
@@ -319,7 +307,9 @@ async fn expand_placeholders(ctx: &mut Context, endpoint: &str) -> Result<String
     }
     let repo = ctx.base_repo().await?.clone();
     let branch = if endpoint.contains("{branch}") {
-        crate::git::current_branch().await.map_err(CliError::Other)?
+        crate::git::current_branch()
+            .await
+            .map_err(CliError::Other)?
     } else {
         String::new()
     };
@@ -332,9 +322,9 @@ async fn expand_placeholders(ctx: &mut Context, endpoint: &str) -> Result<String
 fn parse_headers(specs: &[String]) -> Result<HeaderMap, CliError> {
     let mut hdr = HeaderMap::new();
     for spec in specs {
-        let (k, v) = spec.split_once(':').ok_or_else(|| {
-            CliError::Flag(format!("expected `Key: value` in --header {spec:?}"))
-        })?;
+        let (k, v) = spec
+            .split_once(':')
+            .ok_or_else(|| CliError::Flag(format!("expected `Key: value` in --header {spec:?}")))?;
         let name = HeaderName::try_from(k.trim())
             .map_err(|e| CliError::Flag(format!("invalid header name {k:?}: {e}")))?;
         let value = HeaderValue::from_str(v.trim())
@@ -344,7 +334,11 @@ fn parse_headers(specs: &[String]) -> Result<HeaderMap, CliError> {
     Ok(hdr)
 }
 
-fn build_body(ctx: &mut Context, args: &ApiArgs, method: &Method) -> Result<Option<Vec<u8>>, CliError> {
+fn build_body(
+    ctx: &mut Context,
+    args: &ApiArgs,
+    method: &Method,
+) -> Result<Option<Vec<u8>>, CliError> {
     // Body from --input wins outright.
     if let Some(p) = &args.input {
         let bytes = if p == "-" {
@@ -403,8 +397,7 @@ fn build_body(ctx: &mut Context, args: &ApiArgs, method: &Method) -> Result<Opti
             }
         }
     }
-    let bytes = serde_json::to_vec(&Value::Object(obj))
-        .map_err(|e| CliError::Other(e.into()))?;
+    let bytes = serde_json::to_vec(&Value::Object(obj)).map_err(|e| CliError::Other(e.into()))?;
     Ok(Some(bytes))
 }
 
@@ -426,7 +419,11 @@ fn parse_duration(s: &str) -> Result<Duration, CliError> {
 async fn build_transport(ctx: &mut Context, host: &str) -> Result<Transport, CliError> {
     let source = Arc::new(ctx.auth_source().await?);
     let http = ctx.http_client().clone();
-    let ua = format!("bb/{} (+{})", ctx.build.version, crate::context::BB_HOMEPAGE);
+    let ua = format!(
+        "bb/{} (+{})",
+        ctx.build.version,
+        crate::context::BB_HOMEPAGE
+    );
     Ok(api::Transport::new(http, source, host, ua))
 }
 

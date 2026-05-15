@@ -97,9 +97,7 @@ pub async fn write_user(
     }
 
     let mut hosts_w = hosts.write().await;
-    hosts_w
-        .set_user_block(&rec.host, &rec.user, block)
-        .await?;
+    hosts_w.set_user_block(&rec.host, &rec.user, block).await?;
     // First user for this host becomes active.
     if hosts_w.get(&rec.host, ACTIVE_USER).is_none() {
         hosts_w.set(&rec.host, ACTIVE_USER, &rec.user).await?;
@@ -243,7 +241,10 @@ mod tests {
         assert_eq!(rec.scopes, vec!["account".to_string(), "repository".into()]);
         // hosts.yml must NOT contain the token when keyring is used.
         let raw = std::fs::read_to_string(dir.path().join("hosts.yml")).unwrap();
-        assert!(!raw.contains("access-1"), "tokens leaked into hosts.yml: {raw}");
+        assert!(
+            !raw.contains("access-1"),
+            "tokens leaked into hosts.yml: {raw}"
+        );
     }
 
     #[tokio::test]
@@ -254,7 +255,10 @@ mod tests {
             .await
             .unwrap();
         let raw = std::fs::read_to_string(dir.path().join("hosts.yml")).unwrap();
-        assert!(raw.contains("access-1"), "expected plaintext token in hosts.yml: {raw}");
+        assert!(
+            raw.contains("access-1"),
+            "expected plaintext token in hosts.yml: {raw}"
+        );
     }
 
     #[tokio::test]
@@ -265,7 +269,10 @@ mod tests {
             .await
             .unwrap();
         let h = hosts.read().await;
-        assert_eq!(h.get("bitbucket.org", "active_user").as_deref(), Some("alice"));
+        assert_eq!(
+            h.get("bitbucket.org", "active_user").as_deref(),
+            Some("alice")
+        );
     }
 
     #[tokio::test]
@@ -277,7 +284,9 @@ mod tests {
             .unwrap();
         // Swap to an empty keyring so the read path is forced to hosts.yml.
         let kr2: Arc<dyn KeyringBackend> = Arc::new(MemKeyring::new());
-        let rec = read_user(&hosts, &kr2, "bitbucket.org", None).await.unwrap();
+        let rec = read_user(&hosts, &kr2, "bitbucket.org", None)
+            .await
+            .unwrap();
         assert_eq!(rec.access_token, "access-1");
         assert_eq!(rec.refresh_token, "refresh-1");
     }

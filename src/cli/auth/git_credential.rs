@@ -14,8 +14,7 @@ pub struct GitCredentialArgs {
 }
 
 pub async fn run(args: GitCredentialArgs, ctx: &mut Context) -> Result<(), CliError> {
-    let op = CredentialOp::parse(&args.op)
-        .map_err(|e| CliError::Flag(e.to_string()))?;
+    let op = CredentialOp::parse(&args.op).map_err(|e| CliError::Flag(e.to_string()))?;
     if !matches!(op, CredentialOp::Get) {
         // `store` and `erase` are deliberately no-ops — bb owns the credential store.
         return Ok(());

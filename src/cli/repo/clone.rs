@@ -31,8 +31,7 @@ pub struct CloneArgs {
 }
 
 pub async fn run(args: CloneArgs, ctx: &mut Context) -> Result<(), CliError> {
-    let repo =
-        BbRepo::from_full_name(&args.repo).map_err(|e| CliError::Flag(e.to_string()))?;
+    let repo = BbRepo::from_full_name(&args.repo).map_err(|e| CliError::Flag(e.to_string()))?;
     let cfg = ctx.config_loaded().await?;
     let protocol = cfg.get_or_default("git_protocol");
     let url = clone_url(&repo, &protocol);
@@ -53,10 +52,7 @@ pub async fn run(args: CloneArgs, ctx: &mut Context) -> Result<(), CliError> {
     if let Some((ws, slug)) = parent {
         let parent_repo = BbRepo::with_host(ws.clone(), slug.clone(), repo.host.clone());
         let upstream_url = clone_url(&parent_repo, &protocol);
-        let target_dir = args
-            .directory
-            .clone()
-            .unwrap_or_else(|| repo.slug.clone());
+        let target_dir = args.directory.clone().unwrap_or_else(|| repo.slug.clone());
         if let Err(e) = git::remote_add_in(
             std::path::Path::new(&target_dir),
             &args.upstream_remote_name,
@@ -64,11 +60,8 @@ pub async fn run(args: CloneArgs, ctx: &mut Context) -> Result<(), CliError> {
         )
         .await
         {
-            print_warning(
-                &mut ctx.io,
-                &format!("could not add upstream remote: {e}"),
-            )
-            .map_err(io_err)?;
+            print_warning(&mut ctx.io, &format!("could not add upstream remote: {e}"))
+                .map_err(io_err)?;
         }
     }
 

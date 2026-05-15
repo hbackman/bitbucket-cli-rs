@@ -126,17 +126,18 @@ async fn render_human(ctx: &mut Context, r: &Repository) -> Result<(), CliError>
     Ok(())
 }
 
-async fn fetch_readme(
-    client: &crate::api::Client,
-    repo: &BbRepo,
-    branch: &str,
-) -> Option<String> {
+async fn fetch_readme(client: &crate::api::Client, repo: &BbRepo, branch: &str) -> Option<String> {
     let svc = client.repositories();
     for name in README_CANDIDATES {
         match svc.read_source(repo, branch, name).await {
             Ok(bytes) => {
                 if let Ok(s) = std::str::from_utf8(&bytes) {
-                    return Some(prefix_lines(s, "  ").into_iter().collect::<Vec<_>>().join(""));
+                    return Some(
+                        prefix_lines(s, "  ")
+                            .into_iter()
+                            .collect::<Vec<_>>()
+                            .join(""),
+                    );
                 }
             }
             Err(_) => continue,

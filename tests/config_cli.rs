@@ -116,15 +116,15 @@ fn host_scoped_set_writes_hosts_yml() {
 
 #[test]
 fn pr_list_with_repo_override_targets_that_repo() {
-    // `bb pr list` is still a stub, but the dispatch should accept --repo and reach
-    // the stub regardless of what `git remote` says.
+    // `--repo` should propagate through dispatch and reach the API layer, which
+    // fails with an auth error in an unconfigured config dir — exit code 4, not 2.
     let dir = TempDir::new().unwrap();
     bb_in(&dir)
         .args(["-R", "acme/widgets", "pr", "list"])
         .assert()
         .failure()
-        .code(1)
-        .stderr(predicate::str::contains("not yet implemented"));
+        .code(4)
+        .stderr(predicate::str::contains("not logged in"));
 }
 
 #[test]
@@ -133,8 +133,11 @@ fn bb_repo_env_var_routes_through_dispatch() {
     let mut cmd = Command::cargo_bin("bb").expect("bb binary built");
     cmd.env("BB_CONFIG_DIR", dir.path())
         .env("BB_REPO", "acme/widgets")
+        .env_remove("BB_TOKEN")
+        .env_remove("BITBUCKET_TOKEN")
         .args(["pr", "list"]);
     cmd.assert()
         .failure()
-        .stderr(predicate::str::contains("not yet implemented"));
+        .code(4)
+        .stderr(predicate::str::contains("not logged in"));
 }

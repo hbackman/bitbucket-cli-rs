@@ -46,7 +46,10 @@ pub async fn fetch_user_at(
             body.chars().take(200).collect::<String>()
         ));
     }
-    let user: BitbucketUser = resp.json().await.with_context(|| format!("parsing {url}"))?;
+    let user: BitbucketUser = resp
+        .json()
+        .await
+        .with_context(|| format!("parsing {url}"))?;
     if user.username.is_empty() {
         bail!("Bitbucket /2.0/user response had no `username` field");
     }

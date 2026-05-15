@@ -85,7 +85,11 @@ impl Transport {
 
             let method = prepared.method().clone();
             let url = prepared.url().clone();
-            let resp = self.http.execute(prepared).await.map_err(ApiError::Network)?;
+            let resp = self
+                .http
+                .execute(prepared)
+                .await
+                .map_err(ApiError::Network)?;
             let status = resp.status();
             let headers = resp.headers().clone();
             let body = resp.bytes().await.map_err(ApiError::Network)?;
@@ -128,7 +132,12 @@ impl Transport {
                     body,
                 });
             }
-            return Err(ApiError::from_response(method, url.to_string(), status, body));
+            return Err(ApiError::from_response(
+                method,
+                url.to_string(),
+                status,
+                body,
+            ));
         }
     }
 
@@ -155,13 +164,22 @@ impl Transport {
         log_request(self.debug, &prepared);
         let method = prepared.method().clone();
         let url = prepared.url().clone();
-        let resp = self.http.execute(prepared).await.map_err(ApiError::Network)?;
+        let resp = self
+            .http
+            .execute(prepared)
+            .await
+            .map_err(ApiError::Network)?;
         let status = resp.status();
         if status.is_success() {
             return Ok(resp);
         }
         let body = resp.bytes().await.map_err(ApiError::Network)?;
-        Err(ApiError::from_response(method, url.to_string(), status, body))
+        Err(ApiError::from_response(
+            method,
+            url.to_string(),
+            status,
+            body,
+        ))
     }
 
     async fn inject_headers(&self, mut req: Request) -> Result<Request, ApiError> {
@@ -175,11 +193,10 @@ impl Transport {
 
         let headers = req.headers_mut();
         if !headers.contains_key(AUTHORIZATION) {
-            let value = HeaderValue::from_str(&format!("Bearer {token}")).map_err(|e| {
-                ApiError::Auth {
+            let value =
+                HeaderValue::from_str(&format!("Bearer {token}")).map_err(|e| ApiError::Auth {
                     hint: format!("token contains invalid header bytes: {e}"),
-                }
-            })?;
+                })?;
             headers.insert(AUTHORIZATION, value);
         }
         if !headers.contains_key(USER_AGENT) {
@@ -249,7 +266,10 @@ pub(crate) mod tests {
         let path = dir.path().join("hosts.yml");
         let mut hosts = Hosts::load_from(&path).await.unwrap();
         let mut block = Mapping::new();
-        block.insert(Value::String("type".into()), Value::String("api_token".into()));
+        block.insert(
+            Value::String("type".into()),
+            Value::String("api_token".into()),
+        );
         block.insert(
             Value::String("oauth_token".into()),
             Value::String(token.into()),
@@ -285,12 +305,7 @@ pub(crate) mod tests {
     async fn injects_bearer_token_from_env() {
         let _g = scoped_env("BB_TOKEN", Some("the-token"));
         let auth = test_auth();
-        let t = Transport::new(
-            reqwest::Client::new(),
-            auth,
-            "bitbucket.org",
-            "bb-test/0.0",
-        );
+        let t = Transport::new(reqwest::Client::new(), auth, "bitbucket.org", "bb-test/0.0");
         let req = reqwest::Client::new()
             .get("https://example.invalid/")
             .build()

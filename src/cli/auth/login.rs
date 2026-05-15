@@ -79,7 +79,10 @@ pub async fn run(args: LoginArgs, ctx: &mut Context) -> Result<(), CliError> {
     };
 
     let insecure = args.insecure_storage;
-    source.store(&rec, insecure).await.map_err(CliError::Other)?;
+    source
+        .store(&rec, insecure)
+        .await
+        .map_err(CliError::Other)?;
     source
         .set_active_user(&rec.host, &rec.user)
         .await
@@ -94,8 +97,12 @@ pub async fn run(args: LoginArgs, ctx: &mut Context) -> Result<(), CliError> {
         storage_note
     )
     .map_err(|e| CliError::Other(e.into()))?;
-    writeln!(ctx.io.err(), "✓ Configured git protocol {}", rec.git_protocol)
-        .map_err(|e| CliError::Other(e.into()))?;
+    writeln!(
+        ctx.io.err(),
+        "✓ Configured git protocol {}",
+        rec.git_protocol
+    )
+    .map_err(|e| CliError::Other(e.into()))?;
 
     if !args.no_setup_git {
         writeln!(
@@ -123,12 +130,10 @@ async fn login_with_browser(
     }
     let scopes: Vec<String> = parse_scopes(args.scopes.as_deref());
 
-    let (listener, port) = callback::bind_loopback()
-        .await
-        .map_err(CliError::Other)?;
+    let (listener, port) = callback::bind_loopback().await.map_err(CliError::Other)?;
     let redirect_uri = format!("http://localhost:{port}");
-    let client = oauth::oauth_client(&client_id, &client_secret, &redirect_uri)
-        .map_err(CliError::Other)?;
+    let client =
+        oauth::oauth_client(&client_id, &client_secret, &redirect_uri).map_err(CliError::Other)?;
     let state = CsrfToken::new_random();
     let (auth_url, _csrf) = oauth::build_authorize_url(&client, &scopes, state.clone());
 

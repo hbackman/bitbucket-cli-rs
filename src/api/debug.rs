@@ -86,11 +86,7 @@ pub fn log_response(
     let mut sink = open_sink();
     let _ = writeln!(sink, "< {} {} → {}", method, url, status);
     for (name, value) in headers {
-        let _ = writeln!(
-            sink,
-            "< {name}: {}",
-            value.to_str().unwrap_or("<binary>")
-        );
+        let _ = writeln!(sink, "< {name}: {}", value.to_str().unwrap_or("<binary>"));
     }
     let _ = writeln!(sink, "< {}", preview(body));
     let _ = writeln!(sink, "<");

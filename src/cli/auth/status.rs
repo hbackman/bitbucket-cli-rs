@@ -75,12 +75,15 @@ async fn print_host(
         "  ✓ Logged in to {host} as {user} ({storage})"
     )
     .map_err(|e| CliError::Other(e.into()))?;
-    writeln!(ctx.io.out(), "  - Active user: {user}")
-        .map_err(|e| CliError::Other(e.into()))?;
+    writeln!(ctx.io.out(), "  - Active user: {user}").map_err(|e| CliError::Other(e.into()))?;
 
     let rec = source.load(host, None).await.map_err(CliError::Other)?;
-    writeln!(ctx.io.out(), "  - Git operations protocol: {}", rec.git_protocol)
-        .map_err(|e| CliError::Other(e.into()))?;
+    writeln!(
+        ctx.io.out(),
+        "  - Git operations protocol: {}",
+        rec.git_protocol
+    )
+    .map_err(|e| CliError::Other(e.into()))?;
     if !rec.scopes.is_empty() {
         let joined = rec
             .scopes
@@ -115,8 +118,7 @@ async fn print_host(
             .access_token(host, None)
             .await
             .map_err(|e| CliError::Auth(e.to_string()))?;
-        writeln!(ctx.io.out(), "  - Token: {token}")
-            .map_err(|e| CliError::Other(e.into()))?;
+        writeln!(ctx.io.out(), "  - Token: {token}").map_err(|e| CliError::Other(e.into()))?;
     }
     Ok(())
 }

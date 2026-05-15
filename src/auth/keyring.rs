@@ -56,10 +56,12 @@ impl KeyringBackend for SystemKeyring {
     }
 
     fn get_password(&self, host: &str, user: &str) -> Result<String, KeyringError> {
-        Self::entry(host, user)?.get_password().map_err(|e| match e {
-            ::keyring::Error::NoEntry => KeyringError::NotFound,
-            other => KeyringError::Backend(other.to_string()),
-        })
+        Self::entry(host, user)?
+            .get_password()
+            .map_err(|e| match e {
+                ::keyring::Error::NoEntry => KeyringError::NotFound,
+                other => KeyringError::Backend(other.to_string()),
+            })
     }
 
     fn delete_password(&self, host: &str, user: &str) -> Result<(), KeyringError> {

@@ -82,7 +82,13 @@ mod tests {
         assert_eq!(CliError::Flag("x".into()).exit_code(), 2);
         assert_eq!(CliError::NotFound("x".into()).exit_code(), 3);
         assert_eq!(CliError::Auth("x".into()).exit_code(), 4);
-        assert_eq!(CliError::RateLimit { retry_after_secs: 7 }.exit_code(), 5);
+        assert_eq!(
+            CliError::RateLimit {
+                retry_after_secs: 7
+            }
+            .exit_code(),
+            5
+        );
         assert_eq!(CliError::Cancel.exit_code(), 6);
         assert_eq!(CliError::NotImplemented.exit_code(), 1);
         assert_eq!(CliError::Silent.exit_code(), 1);

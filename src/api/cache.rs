@@ -81,12 +81,18 @@ pub async fn read(key: &str, ttl: Duration) -> Result<Option<Entry>> {
 
 pub async fn write(key: &str, entry: &Entry) -> Result<()> {
     let dir = cache_dir()?;
-    tokio::fs::create_dir_all(&dir).await.context("mkdir cache")?;
+    tokio::fs::create_dir_all(&dir)
+        .await
+        .context("mkdir cache")?;
     let path = dir.join(key);
     let tmp = path.with_extension("tmp");
     let bytes = serde_json::to_vec(entry).context("encode cache entry")?;
-    tokio::fs::write(&tmp, &bytes).await.context("write cache tmp")?;
-    tokio::fs::rename(&tmp, &path).await.context("rename cache file")?;
+    tokio::fs::write(&tmp, &bytes)
+        .await
+        .context("write cache tmp")?;
+    tokio::fs::rename(&tmp, &path)
+        .await
+        .context("rename cache file")?;
     Ok(())
 }
 

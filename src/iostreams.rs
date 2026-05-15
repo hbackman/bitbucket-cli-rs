@@ -250,12 +250,20 @@ impl ColorScheme {
     }
 
     pub fn success_icon(&self) -> String {
-        let icon = if use_unicode(self.enabled) { "✓" } else { "v" };
+        let icon = if use_unicode(self.enabled) {
+            "✓"
+        } else {
+            "v"
+        };
         self.green(icon)
     }
 
     pub fn failure_icon(&self) -> String {
-        let icon = if use_unicode(self.enabled) { "✗" } else { "x" };
+        let icon = if use_unicode(self.enabled) {
+            "✗"
+        } else {
+            "x"
+        };
         self.red(icon)
     }
 

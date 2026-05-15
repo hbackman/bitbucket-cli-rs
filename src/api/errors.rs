@@ -74,8 +74,12 @@ impl ApiError {
         status: reqwest::StatusCode,
         body: bytes::Bytes,
     ) -> Self {
-        let (message, errors) = parse_envelope(&body)
-            .unwrap_or_else(|| (status.canonical_reason().unwrap_or("error").to_string(), vec![]));
+        let (message, errors) = parse_envelope(&body).unwrap_or_else(|| {
+            (
+                status.canonical_reason().unwrap_or("error").to_string(),
+                vec![],
+            )
+        });
         Self::Response(Box::new(ResponseError {
             status,
             method,

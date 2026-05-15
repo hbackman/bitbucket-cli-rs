@@ -26,7 +26,10 @@ async fn auth_with_token(token: &str) -> (Arc<AuthSource>, TempDir) {
     let mut hosts = Hosts::load_from(&path).await.unwrap();
 
     let mut block = Mapping::new();
-    block.insert(Value::String("type".into()), Value::String("api_token".into()));
+    block.insert(
+        Value::String("type".into()),
+        Value::String("api_token".into()),
+    );
     block.insert(
         Value::String("oauth_token".into()),
         Value::String(token.into()),
@@ -159,12 +162,10 @@ async fn paginates_follows_next() {
     Mock::given(method("GET"))
         .and(path("/repositories/ws/repo/pullrequests"))
         .and(query_param("pagelen", "50"))
-        .respond_with(
-            ResponseTemplate::new(200).set_body_json(json!({
-                "values": [{"id": 1, "title": "first"}],
-                "next": next_url
-            })),
-        )
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "values": [{"id": 1, "title": "first"}],
+            "next": next_url
+        })))
         .mount(&server)
         .await;
     Mock::given(method("GET"))

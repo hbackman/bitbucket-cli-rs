@@ -42,7 +42,9 @@ pub async fn run(args: SetupGitArgs, ctx: &mut Context) -> Result<(), CliError> 
     git::config_unset_global_all(&key_helper)
         .await
         .map_err(CliError::Other)?;
-    git::config_add_global(&key_helper, "").await.map_err(CliError::Other)?;
+    git::config_add_global(&key_helper, "")
+        .await
+        .map_err(CliError::Other)?;
     git::config_add_global(&key_helper, &helper_cmd)
         .await
         .map_err(CliError::Other)?;

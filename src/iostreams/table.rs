@@ -114,9 +114,10 @@ impl<'a> TablePrinter<'a> {
 
         // Shrink truncatable columns if we'd otherwise exceed terminal width.
         let gutter = 2usize;
-        let term_width = width_override.or_else(detect_term_width).unwrap_or(usize::MAX);
-        let mut total: usize =
-            widths.iter().sum::<usize>() + gutter * col_count.saturating_sub(1);
+        let term_width = width_override
+            .or_else(detect_term_width)
+            .unwrap_or(usize::MAX);
+        let mut total: usize = widths.iter().sum::<usize>() + gutter * col_count.saturating_sub(1);
         if total > term_width {
             for i in (0..col_count).rev() {
                 if !columns[i].wrap {

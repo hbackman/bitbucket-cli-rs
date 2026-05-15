@@ -108,19 +108,33 @@ async fn list_accessible_to_user(
     client: &crate::api::Client,
     args: &ListArgs,
 ) -> Result<Vec<Repository>, CliError> {
-    // `GET /2.0/user/permissions/repositories` paginates `{permission, repository}` entries.
-    // We collect lazily until we hit `limit`, mapping out the inner repo.
-    let url = client.base().join("user/permissions/repositories").unwrap();
-    let mut pages: crate::api::Paginated<UserRepoPerm> =
-        crate::api::Paginated::new(client.transport(), url.to_string());
+    // Bitbucket CHANGE-2770 retired the unscoped `GET /2.0/repositories` endpoint.
+    // The replacement: enumerate the user's workspaces, then list repos in each
+    // (`GET /2.0/repositories/{workspace}?role=…`) and concatenate. We stop early
+    // once we've collected `limit` repos.
+    let role = args.role.as_deref().filter(|s| !s.is_empty()).map(str::to_string);
     let limit = args.limit as usize;
-    let mut out: Vec<Repository> = Vec::new();
-    while let Some(item) = pages.next_item().await? {
-        out.push(item.repository);
+
+    let memberships = client.workspaces().list().collect(0).await?;
+    let mut out: Vec<Repository> = Vec::with_capacity(limit);
+    for m in memberships {
         if out.len() >= limit {
             break;
         }
+        let opts = crate::api::repository::ListOpts {
+            role: role.clone(),
+            sort: args.sort.as_deref().map(sort_key),
+            ..Default::default()
+        };
+        let remaining = limit - out.len();
+        let page = client
+            .repositories()
+            .list(&m.workspace.slug, opts)
+            .collect(remaining)
+            .await?;
+        out.extend(page);
     }
+    out.truncate(limit);
     Ok(out)
 }
 
@@ -141,10 +155,9 @@ fn apply_local_filters(mut repos: Vec<Repository>, args: &ListArgs) -> Vec<Repos
 fn emit_json(ctx: &mut Context, repos: &[Repository], mode: &JsonMode) -> Result<(), CliError> {
     let projected: Vec<Value> = match mode {
         JsonMode::Off => return Ok(()),
-        JsonMode::Fields(fields) | JsonMode::FilterFields { fields, .. } => repos
-            .iter()
-            .map(|r| project_repo(r, fields))
-            .collect(),
+        JsonMode::Fields(fields) | JsonMode::FilterFields { fields, .. } => {
+            repos.iter().map(|r| project_repo(r, fields)).collect()
+        }
     };
     let array = Value::Array(projected);
 
@@ -190,12 +203,7 @@ fn render_table(ctx: &mut Context, repos: &[Repository]) -> Result<(), CliError>
             .map(|d| truncate(&d, 60))
             .unwrap_or_default();
         let visibility = if r.is_private { "private" } else { "public" };
-        t.add_row([
-            r.full_name.clone(),
-            visibility.to_string(),
-            desc,
-            updated,
-        ]);
+        t.add_row([r.full_name.clone(), visibility.to_string(), desc, updated]);
     }
     t.render().map_err(io_err)
 }
@@ -207,9 +215,4 @@ fn parse_rfc3339(s: &str) -> Option<time::OffsetDateTime> {
 
 fn io_err(e: std::io::Error) -> CliError {
     CliError::Other(e.into())
-}
-
-#[derive(Debug, serde::Deserialize)]
-struct UserRepoPerm {
-    repository: Repository,
 }

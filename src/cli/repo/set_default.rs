@@ -87,7 +87,9 @@ async fn view_current(ctx: &mut Context) -> Result<(), CliError> {
 
 async fn unset_default(ctx: &mut Context) -> Result<(), CliError> {
     if in_git_repo().await {
-        git::config_unset_local(KEY).await.map_err(CliError::Other)?;
+        git::config_unset_local(KEY)
+            .await
+            .map_err(CliError::Other)?;
         print_success(&mut ctx.io, "Removed local default repo").map_err(io_err)?;
         return Ok(());
     }

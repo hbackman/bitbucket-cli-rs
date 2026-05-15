@@ -20,11 +20,7 @@ pub struct LogoutArgs {
 }
 
 pub async fn run(args: LogoutArgs, ctx: &mut Context) -> Result<(), CliError> {
-    let host = args
-        .hostname
-        .as_deref()
-        .unwrap_or(DEFAULT_HOST)
-        .to_string();
+    let host = args.hostname.as_deref().unwrap_or(DEFAULT_HOST).to_string();
     let source = ctx.auth_source().await?;
     let user = match args.user {
         Some(u) => u,
@@ -34,10 +30,7 @@ pub async fn run(args: LogoutArgs, ctx: &mut Context) -> Result<(), CliError> {
                 .ok_or_else(|| CliError::Auth(format!("not logged in to {host}")))?
         }
     };
-    source
-        .logout(&host, &user)
-        .await
-        .map_err(CliError::Other)?;
+    source.logout(&host, &user).await.map_err(CliError::Other)?;
     writeln!(ctx.io.err(), "✓ Logged out of {host} as {user}")
         .map_err(|e| CliError::Other(e.into()))?;
     Ok(())

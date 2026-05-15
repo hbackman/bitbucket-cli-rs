@@ -98,12 +98,7 @@ impl Hosts {
     }
 
     /// Replace (or insert) the user block under `<host>.users.<user>`.
-    pub async fn set_user_block(
-        &mut self,
-        host: &str,
-        user: &str,
-        block: Mapping,
-    ) -> Result<()> {
+    pub async fn set_user_block(&mut self, host: &str, user: &str, block: Mapping) -> Result<()> {
         let host_v = Value::String(host.into());
         let users_v = Value::String("users".into());
         let user_v = Value::String(user.into());
@@ -198,10 +193,7 @@ mod tests {
         let path = dir.path().join("hosts.yml");
         let mut h = Hosts::load_from(&path).await.unwrap();
         let mut block = Mapping::new();
-        block.insert(
-            Value::String("type".into()),
-            Value::String("oauth".into()),
-        );
+        block.insert(Value::String("type".into()), Value::String("oauth".into()));
         block.insert(
             Value::String("git_protocol".into()),
             Value::String("ssh".into()),
@@ -211,7 +203,10 @@ mod tests {
             .unwrap();
         let reloaded = Hosts::load_from(&path).await.unwrap();
         assert_eq!(reloaded.user_block("bitbucket.org", "hbackman"), block);
-        assert_eq!(reloaded.users("bitbucket.org"), vec!["hbackman".to_string()]);
+        assert_eq!(
+            reloaded.users("bitbucket.org"),
+            vec!["hbackman".to_string()]
+        );
     }
 
     #[tokio::test]

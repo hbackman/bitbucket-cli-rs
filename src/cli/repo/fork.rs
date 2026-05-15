@@ -51,12 +51,14 @@ pub async fn run(args: ForkArgs, ctx: &mut Context) -> Result<(), CliError> {
 
     let owner_workspace = match &args.org {
         Some(s) if !s.is_empty() => s.clone(),
-        _ => client
-            .user()
-            .current()
-            .await
-            .map_err(CliError::from)?
-            .username,
+        _ => {
+            client
+                .user()
+                .current()
+                .await
+                .map_err(CliError::from)?
+                .username
+        }
     };
 
     let mut body = ForkInput::default();
@@ -83,7 +85,8 @@ pub async fn run(args: ForkArgs, ctx: &mut Context) -> Result<(), CliError> {
     // If we're in a clone of the source repo, rewire the remotes.
     if args.remote {
         if let Err(e) = rewire_remotes(ctx, &source, &fork_repo, &args).await {
-            print_warning(&mut ctx.io, &format!("could not update remotes: {e}")).map_err(io_err)?;
+            print_warning(&mut ctx.io, &format!("could not update remotes: {e}"))
+                .map_err(io_err)?;
         }
     }
 

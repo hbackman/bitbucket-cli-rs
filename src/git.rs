@@ -23,7 +23,9 @@ pub async fn config_get_global(key: &str) -> Result<String> {
 
 /// Append a value to a multi-valued *global* git config key.
 pub async fn config_add_global(key: &str, value: &str) -> Result<()> {
-    run(&["config", "--global", "--add", key, value]).await.map(|_| ())
+    run(&["config", "--global", "--add", key, value])
+        .await
+        .map(|_| ())
 }
 
 /// Remove every value of a multi-valued *global* git config key. Tolerates
@@ -76,7 +78,11 @@ pub async fn repo_root() -> Result<PathBuf> {
 /// Returns the set of remote names defined in the current repo.
 pub async fn list_remotes() -> Result<Vec<String>> {
     let out = run(&["remote"]).await?;
-    Ok(out.lines().map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).collect())
+    Ok(out
+        .lines()
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty())
+        .collect())
 }
 
 pub async fn remote_add(name: &str, url: &str) -> Result<()> {
@@ -107,7 +113,9 @@ pub async fn config_unset_local(key: &str) -> Result<()> {
 
 /// Initialize a new git repo in `dir` (no-op if it's already a repo).
 pub async fn init(dir: &std::path::Path) -> Result<()> {
-    run(&["-C", dir.to_string_lossy().as_ref(), "init"]).await.map(|_| ())
+    run(&["-C", dir.to_string_lossy().as_ref(), "init"])
+        .await
+        .map(|_| ())
 }
 
 /// `git push -u <remote> <branch>` from `dir`.
@@ -136,6 +144,42 @@ pub async fn remote_add_in(dir: &std::path::Path, name: &str, url: &str) -> Resu
     ])
     .await
     .map(|_| ())
+}
+
+/// Subject (first line) of every commit in `from..to`. Oldest first.
+pub async fn log_subjects(from: &str, to: &str) -> Result<Vec<String>> {
+    let out = run(&[
+        "log",
+        "--reverse",
+        "--pretty=format:%s",
+        &format!("{from}..{to}"),
+    ])
+    .await?;
+    Ok(out.lines().map(str::to_string).collect())
+}
+
+/// Full message (subject + body) of every commit in `from..to`. Oldest first.
+/// Each entry is `subject\n\nbody` (body may be empty).
+pub async fn log_messages(from: &str, to: &str) -> Result<Vec<String>> {
+    // %B is "subject + blank line + body". %x1e (ASCII RS) separates commits.
+    let out = run(&[
+        "log",
+        "--reverse",
+        "--pretty=format:%B%x1e",
+        &format!("{from}..{to}"),
+    ])
+    .await?;
+    Ok(out
+        .split('\x1e')
+        .map(|s| s.trim_matches('\n').to_string())
+        .filter(|s| !s.is_empty())
+        .collect())
+}
+
+/// Check whether a remote branch ref exists (`git ls-remote --heads <remote> <branch>`).
+pub async fn remote_branch_exists(remote: &str, branch: &str) -> Result<bool> {
+    let out = run(&["ls-remote", "--heads", remote, branch]).await?;
+    Ok(!out.trim().is_empty())
 }
 
 /// Clone a repo. Extra args are passed through verbatim (for `--depth 1` etc.).

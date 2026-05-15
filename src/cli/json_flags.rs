@@ -62,9 +62,7 @@ impl JsonFlags {
 
         match (&self.json, &self.jq) {
             (None, None) => Ok(JsonMode::Off),
-            (None, Some(_)) => {
-                Err(CliError::Flag("--jq requires --json".into()))
-            }
+            (None, Some(_)) => Err(CliError::Flag("--jq requires --json".into())),
             (Some(fields), jq) => {
                 if fields.is_empty() {
                     return Err(CliError::Flag(format!(

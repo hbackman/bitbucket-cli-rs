@@ -80,10 +80,7 @@ pub async fn exchange_code(client: &BasicClient, code: String) -> Result<OAuthTo
 }
 
 /// Exchange a refresh token for a fresh access token.
-pub async fn refresh_oauth_token(
-    client: &BasicClient,
-    refresh_token: &str,
-) -> Result<OAuthTokens> {
+pub async fn refresh_oauth_token(client: &BasicClient, refresh_token: &str) -> Result<OAuthTokens> {
     let resp = client
         .exchange_refresh_token(&RefreshToken::new(refresh_token.to_string()))
         .request_async(async_http_client)
@@ -119,7 +116,12 @@ mod tests {
     use super::*;
 
     fn make_client() -> BasicClient {
-        oauth_client("test-client-id", "test-client-secret", "http://localhost:54321").unwrap()
+        oauth_client(
+            "test-client-id",
+            "test-client-secret",
+            "http://localhost:54321",
+        )
+        .unwrap()
     }
 
     #[test]
@@ -129,8 +131,14 @@ mod tests {
         let state = CsrfToken::new("the-state".to_string());
         let (url, _csrf) = build_authorize_url(&client, &scopes, state);
         let params: std::collections::HashMap<_, _> = url.query_pairs().into_owned().collect();
-        assert_eq!(params.get("client_id").map(String::as_str), Some("test-client-id"));
-        assert_eq!(params.get("response_type").map(String::as_str), Some("code"));
+        assert_eq!(
+            params.get("client_id").map(String::as_str),
+            Some("test-client-id")
+        );
+        assert_eq!(
+            params.get("response_type").map(String::as_str),
+            Some("code")
+        );
         assert_eq!(params.get("state").map(String::as_str), Some("the-state"));
         let scope = params.get("scope").expect("scope param");
         assert!(scope.contains("account"));

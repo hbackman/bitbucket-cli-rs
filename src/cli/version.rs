@@ -26,8 +26,8 @@ pub async fn run_with(args: VersionArgs, ctx: &mut Context) -> Result<(), CliErr
             "commit":  ctx.build.commit,
             "date":    ctx.build.date,
         });
-        let rendered = serde_json::to_string_pretty(&payload)
-            .map_err(|e| CliError::Other(e.into()))?;
+        let rendered =
+            serde_json::to_string_pretty(&payload).map_err(|e| CliError::Other(e.into()))?;
         writeln!(ctx.io.out(), "{rendered}").map_err(|e| CliError::Other(e.into()))?;
     } else {
         writeln!(
@@ -78,7 +78,9 @@ mod tests {
     #[tokio::test]
     async fn json_mode_prints_structured_payload() {
         let (mut ctx, bufs) = Context::test();
-        run_with(VersionArgs { json: true }, &mut ctx).await.unwrap();
+        run_with(VersionArgs { json: true }, &mut ctx)
+            .await
+            .unwrap();
         let out = bufs.stdout_string();
         assert!(out.contains("\"version\""));
         assert!(out.contains("\"commit\""));

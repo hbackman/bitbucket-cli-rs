@@ -111,7 +111,10 @@ pub async fn run(args: CreateArgs, ctx: &mut Context) -> Result<(), CliError> {
     Ok(())
 }
 
-async fn resolve_target(ctx: &mut Context, args: &CreateArgs) -> Result<(String, String), CliError> {
+async fn resolve_target(
+    ctx: &mut Context,
+    args: &CreateArgs,
+) -> Result<(String, String), CliError> {
     if let Some(name) = args.name.clone() {
         if let Some((ws, slug)) = name.split_once('/') {
             return Ok((ws.to_string(), slug.to_string()));
@@ -131,7 +134,10 @@ async fn resolve_target(ctx: &mut Context, args: &CreateArgs) -> Result<(String,
     let prompter = ctx.prompter();
     let workspace = match args.team.clone() {
         Some(t) if !t.is_empty() => t,
-        _ => prompter.input("Workspace", Some(&default_workspace(ctx).await.unwrap_or_default()))?,
+        _ => prompter.input(
+            "Workspace",
+            Some(&default_workspace(ctx).await.unwrap_or_default()),
+        )?,
     };
     let name = prompter.input("Repository name", None)?;
     Ok((workspace, name))
@@ -139,11 +145,7 @@ async fn resolve_target(ctx: &mut Context, args: &CreateArgs) -> Result<(String,
 
 async fn default_workspace(ctx: &Context) -> Result<String, CliError> {
     let client = ctx.api().await?.clone();
-    let user = client
-        .user()
-        .current()
-        .await
-        .map_err(CliError::from)?;
+    let user = client.user().current().await.map_err(CliError::from)?;
     Ok(user.username)
 }
 

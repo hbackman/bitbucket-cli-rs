@@ -16,11 +16,7 @@ fn bb() -> Command {
     Command::cargo_bin("bb").expect("bb binary built")
 }
 
-fn with_token_env<'a>(
-    cmd: &'a mut Command,
-    dir: &std::path::Path,
-    token: &str,
-) -> &'a mut Command {
+fn with_token_env<'a>(cmd: &'a mut Command, dir: &std::path::Path, token: &str) -> &'a mut Command {
     cmd.env("BB_CONFIG_DIR", dir)
         .env("BB_TOKEN", token)
         .env_remove("BITBUCKET_TOKEN")
@@ -84,8 +80,7 @@ async fn bb_api_field_sends_post_with_json_body() {
         .success();
 
     let requests = server.received_requests().await.unwrap();
-    let body: serde_json::Value =
-        serde_json::from_slice(&requests.last().unwrap().body).unwrap();
+    let body: serde_json::Value = serde_json::from_slice(&requests.last().unwrap().body).unwrap();
     assert_eq!(body, json!({"a": 1, "b": true}));
 }
 
@@ -130,7 +125,9 @@ async fn bb_api_placeholders_use_repo_override() {
     // placeholders embedded — those get replaced before hitting the network.
     Mock::given(method("GET"))
         .and(path("/2.0/repositories/acme/widgets"))
-        .respond_with(ResponseTemplate::new(200).set_body_json(json!({"full_name": "acme/widgets"})))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(json!({"full_name": "acme/widgets"})),
+        )
         .mount(&server)
         .await;
 

@@ -200,10 +200,7 @@ impl RepositoryService {
 
     fn repo_url(&self, repo: &BbRepo) -> Result<Url, ApiError> {
         self.base
-            .join(&format!(
-                "repositories/{}/{}",
-                repo.workspace, repo.slug
-            ))
+            .join(&format!("repositories/{}/{}", repo.workspace, repo.slug))
             .map_err(|e| ApiError::Auth {
                 hint: format!("invalid URL: {e}"),
             })

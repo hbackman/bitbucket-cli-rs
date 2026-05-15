@@ -8,7 +8,8 @@ use super::errors::ApiError;
 use super::pagination::Paginated;
 use super::transport::Transport;
 use super::types::{
-    Activity, BuildStatus, Comment, Commit, CreatePr, MergeInput, PrState, PullRequest, UpdatePr,
+    Activity, Actor, BuildStatus, Comment, Commit, CreatePr, MergeInput, PrState, PullRequest,
+    UpdatePr,
 };
 use crate::bbrepo::BbRepo;
 
@@ -63,11 +64,7 @@ impl PullRequestService {
         self.transport.send_json(req).await
     }
 
-    pub async fn create(
-        &self,
-        repo: &BbRepo,
-        input: &CreatePr,
-    ) -> Result<PullRequest, ApiError> {
+    pub async fn create(&self, repo: &BbRepo, input: &CreatePr) -> Result<PullRequest, ApiError> {
         let req = self
             .transport
             .http
@@ -197,6 +194,54 @@ impl PullRequestService {
             .build()
             .map_err(ApiError::Network)?;
         self.transport.send_json(req).await
+    }
+
+    pub async fn edit_comment(
+        &self,
+        repo: &BbRepo,
+        id: u32,
+        comment_id: u64,
+        body: &str,
+    ) -> Result<Comment, ApiError> {
+        let payload = serde_json::json!({
+            "content": { "raw": body }
+        });
+        let req = self
+            .transport
+            .http
+            .put(self.subpath(repo, id, &format!("comments/{comment_id}")))
+            .json(&payload)
+            .build()
+            .map_err(ApiError::Network)?;
+        self.transport.send_json(req).await
+    }
+
+    pub async fn delete_comment(
+        &self,
+        repo: &BbRepo,
+        id: u32,
+        comment_id: u64,
+    ) -> Result<(), ApiError> {
+        let req = self
+            .transport
+            .http
+            .delete(self.subpath(repo, id, &format!("comments/{comment_id}")))
+            .build()
+            .map_err(ApiError::Network)?;
+        self.transport.send_void(req).await
+    }
+
+    /// `GET /2.0/repositories/{ws}/{repo}/effective-default-reviewers` — list of
+    /// users automatically added as reviewers to new PRs in this repo.
+    pub fn effective_default_reviewers(&self, repo: &BbRepo) -> Paginated<Actor> {
+        let url = self
+            .base
+            .join(&format!(
+                "repositories/{}/{}/effective-default-reviewers",
+                repo.workspace, repo.slug
+            ))
+            .expect("static path is well-formed");
+        Paginated::new(self.transport.clone(), url.to_string())
     }
 
     pub fn statuses(&self, repo: &BbRepo, id: u32) -> Paginated<BuildStatus> {

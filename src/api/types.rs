@@ -10,7 +10,7 @@ use time::OffsetDateTime;
 /// Generic actor (user) — Bitbucket's `account` polymorphism collapsed into one
 /// shape, since for MVP we never need to distinguish app passwords / pipelines
 /// / etc. from a regular user.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Actor {
     #[serde(default)]
     pub uuid: Option<String>,
@@ -157,6 +157,12 @@ pub struct PullRequest {
     #[serde(default)]
     pub close_source_branch: bool,
     #[serde(default)]
+    pub draft: bool,
+    #[serde(default)]
+    pub comment_count: Option<u32>,
+    #[serde(default)]
+    pub task_count: Option<u32>,
+    #[serde(default)]
     pub reviewers: Vec<Actor>,
     #[serde(default)]
     pub participants: Vec<Participant>,
@@ -164,7 +170,7 @@ pub struct PullRequest {
     pub links: Option<serde_json::Value>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct PrEndpoint {
     #[serde(default)]
     pub branch: Option<BranchRef>,
@@ -251,15 +257,9 @@ pub struct BuildStatus {
     pub url: Option<String>,
     #[serde(default)]
     pub description: Option<String>,
-    #[serde(
-        default,
-        with = "time::serde::rfc3339::option"
-    )]
+    #[serde(default, with = "time::serde::rfc3339::option")]
     pub created_on: Option<OffsetDateTime>,
-    #[serde(
-        default,
-        with = "time::serde::rfc3339::option"
-    )]
+    #[serde(default, with = "time::serde::rfc3339::option")]
     pub updated_on: Option<OffsetDateTime>,
 }
 
@@ -276,32 +276,35 @@ pub struct Activity {
 }
 
 /// Body for `POST /pullrequests`. Optional fields are omitted from the JSON via
-/// `skip_serializing_if`.
-#[derive(Debug, Clone, Serialize, Default)]
+/// `skip_serializing_if`. `Deserialize` is also derived so failed-create payloads
+/// can round-trip through the `bb pr create --recover` file.
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct CreatePr {
     pub title: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
     pub source: PrEndpointInput,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub destination: Option<PrEndpointInput>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub close_source_branch: Option<bool>,
-    #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub reviewers: Vec<ReviewerInput>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub draft: Option<bool>,
 }
 
-#[derive(Debug, Clone, Serialize, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct PrEndpointInput {
     pub branch: BranchInput,
 }
 
-#[derive(Debug, Clone, Serialize, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct BranchInput {
     pub name: String,
 }
 
-#[derive(Debug, Clone, Serialize, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ReviewerInput {
     pub uuid: String,
 }
@@ -315,6 +318,10 @@ pub struct UpdatePr {
     pub description: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub destination: Option<PrEndpointInput>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub reviewers: Option<Vec<ReviewerInput>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub draft: Option<bool>,
 }
 
 /// Body for `POST /pullrequests/{id}/merge`. Empty body merges with defaults.

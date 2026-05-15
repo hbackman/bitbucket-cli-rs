@@ -16,8 +16,12 @@ use crate::error::CliError;
 /// prompt (Ctrl-C / closed-editor).
 pub trait Prompter: Send + Sync {
     fn input(&self, prompt: &str, default: Option<&str>) -> Result<String, CliError>;
-    fn select(&self, prompt: &str, options: &[String], default_idx: usize)
-        -> Result<usize, CliError>;
+    fn select(
+        &self,
+        prompt: &str,
+        options: &[String],
+        default_idx: usize,
+    ) -> Result<usize, CliError>;
     fn multi_select(
         &self,
         prompt: &str,
@@ -225,7 +229,11 @@ mod tests {
 
         assert_eq!(p.input("user?", None).unwrap(), "hbackman");
         assert!(p.confirm("ok?", false).unwrap());
-        assert_eq!(p.select("pick", &["a".into(), "b".into(), "c".into()], 0).unwrap(), 2);
+        assert_eq!(
+            p.select("pick", &["a".into(), "b".into(), "c".into()], 0)
+                .unwrap(),
+            2
+        );
     }
 
     #[test]

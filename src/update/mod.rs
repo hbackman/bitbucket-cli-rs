@@ -13,8 +13,7 @@ use anyhow::{Context as _, Result};
 use semver::Version;
 use serde::{Deserialize, Serialize};
 
-const RELEASE_API: &str =
-    "https://api.github.com/repos/hbackman/bitbucket-cli/releases/latest";
+const RELEASE_API: &str = "https://api.github.com/repos/hbackman/bitbucket-cli/releases/latest";
 const CACHE_TTL: Duration = Duration::from_secs(24 * 60 * 60);
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]

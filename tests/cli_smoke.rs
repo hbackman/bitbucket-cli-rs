@@ -37,12 +37,27 @@ fn help_lists_core_subcommands() {
 }
 
 #[test]
-fn pr_list_stub_returns_not_implemented() {
-    bb().args(["pr", "list"])
+fn pr_subcommand_lists_verbs() {
+    bb().args(["pr", "--help"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("list"))
+        .stdout(predicate::str::contains("view"))
+        .stdout(predicate::str::contains("create"))
+        .stdout(predicate::str::contains("merge"))
+        .stdout(predicate::str::contains("checkout"))
+        .stdout(predicate::str::contains("checks"))
+        .stdout(predicate::str::contains("review"));
+}
+
+#[test]
+fn pr_list_json_with_no_value_lists_fields() {
+    bb().args(["pr", "list", "--json", "--repo", "x/y"])
         .assert()
         .failure()
-        .code(1)
-        .stderr(predicate::str::contains("not yet implemented"));
+        .code(2)
+        .stderr(predicate::str::contains("Available fields"))
+        .stderr(predicate::str::contains("title"));
 }
 
 #[test]
