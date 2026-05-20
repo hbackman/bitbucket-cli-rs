@@ -333,7 +333,10 @@ fn parse_pasted_code(input: &str, expected_state: &str) -> Result<String, String
     let code = code.ok_or_else(|| "Missing `code` parameter in pasted input.".to_string())?;
     match state {
         Some(s) if s == expected_state => Ok(code),
-        Some(_) => Err("Pasted input has a mismatched state token; paste the URL from the browser exactly.".into()),
+        Some(_) => Err(
+            "Pasted input has a mismatched state token; paste the URL from the browser exactly."
+                .into(),
+        ),
         None => Err("Pasted input is missing `state`; paste the full redirect URL.".into()),
     }
 }

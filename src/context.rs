@@ -221,7 +221,10 @@ async fn resolve_base_repo(ctx: &Context) -> Result<BbRepo, CliError> {
         }
     }
 
-    Err(CliError::Flag(no_repo_message(foreign_remote, &default_host)))
+    Err(CliError::Flag(no_repo_message(
+        foreign_remote,
+        &default_host,
+    )))
 }
 
 fn no_repo_message(foreign: Option<(String, String)>, default_host: &str) -> String {
